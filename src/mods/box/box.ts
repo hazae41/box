@@ -21,7 +21,7 @@ export namespace Copiable {
 
 export class Box<T extends Disposable> {
 
-  #moved = false
+  moved = false
 
   /**
    * Object that uniquely owns a type T and can dispose it
@@ -31,13 +31,9 @@ export class Box<T extends Disposable> {
   ) { }
 
   [Symbol.dispose]() {
-    if (this.#moved)
+    if (this.moved)
       return
     this.inner[Symbol.dispose]()
-  }
-
-  get moved() {
-    return this.#moved
   }
 
   /**
@@ -46,7 +42,7 @@ export class Box<T extends Disposable> {
    * @throws BoxMovedError if moved
    */
   get(): T {
-    if (this.#moved)
+    if (this.moved)
       throw new BoxMovedError()
     return this.inner
   }
@@ -56,7 +52,7 @@ export class Box<T extends Disposable> {
    * @returns Ok<T> or Err<BoxMovedError> if moved
    */
   tryGet(): Result<T, BoxMovedError> {
-    if (this.#moved)
+    if (this.moved)
       return new Err(new BoxMovedError())
     return new Ok(this.inner)
   }
@@ -67,9 +63,9 @@ export class Box<T extends Disposable> {
    * @throws BoxMovedError if already moved
    */
   unwrap(): T {
-    if (this.#moved)
+    if (this.moved)
       throw new BoxMovedError()
-    this.#moved = false
+    this.moved = true
     return this.inner
   }
 
@@ -78,9 +74,9 @@ export class Box<T extends Disposable> {
    * @returns Ok<T> or Err<BoxMovedError> if already moved
    */
   tryUnwrap(): Result<T, BoxMovedError> {
-    if (this.#moved)
+    if (this.moved)
       return new Err(new BoxMovedError())
-    this.#moved = false
+    this.moved = true
     return new Ok(this.inner)
   }
 
@@ -90,9 +86,9 @@ export class Box<T extends Disposable> {
    * @throws BoxMovedError if already moved
    */
   move() {
-    if (this.#moved)
+    if (this.moved)
       throw new BoxMovedError()
-    this.#moved = false
+    this.moved = true
     return new Box(this.inner)
   }
 
@@ -101,10 +97,23 @@ export class Box<T extends Disposable> {
    * @returns Ok<Box<T>> or Err<BoxMovedError> if already moved
    */
   tryMove(): Result<Box<T>, BoxMovedError> {
-    if (this.#moved)
+    if (this.moved)
       return new Err(new BoxMovedError())
-    this.#moved = false
+    this.moved = true
     return new Ok(new Box(this.inner))
+  }
+
+  /**
+   * Move if not already moved
+   * Useful if you want to take ownership only if available
+   * @example using box2 = box.moveIfNotMoved()
+   * @returns Box<T>
+   */
+  moveIfNotMoved() {
+    if (this.moved)
+      return this
+    this.moved = false
+    return new Box(this.inner)
   }
 
   /**
@@ -113,7 +122,7 @@ export class Box<T extends Disposable> {
    */
   greed() {
     const moved = new Box(this.inner)
-    moved.move()
+    moved.moved = true
     return moved
   }
 

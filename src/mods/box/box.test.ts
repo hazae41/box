@@ -34,7 +34,7 @@ class B<T extends Disposable> {
 
 }
 
-class C implements Disposable {
+class Resource implements Disposable {
 
   disposed = false;
 
@@ -45,15 +45,40 @@ class C implements Disposable {
 
 }
 
-test("test", async ({ test, message }) => {
-  const c = new C()
-  const box = new Box(c)
+await test("holder", async ({ test, message }) => {
+  console.log(message)
+  const r = new Resource()
+  const box = new Box(r)
 
   {
     using a = new A(box)
     using b = a.toB()
   }
 
-  assert(c.disposed)
+  assert(r.disposed)
 })
 
+await test("greed", async ({ test, message }) => {
+  console.log(message)
+
+  const r = new Resource()
+
+  function take(box: Box<Resource>) {
+    using box2 = box.moveIfNotMoved()
+    assert(!box2.inner.disposed)
+  }
+
+  /**
+   * This block will keep ownership of the box
+   */
+  {
+    using box = new Box(r)
+
+    take(box.greed())
+    take(box.greed())
+
+    assert(!r.disposed)
+  }
+
+  assert(r.disposed)
+})
