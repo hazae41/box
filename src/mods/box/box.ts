@@ -104,8 +104,7 @@ export class Box<T extends Disposable> {
   }
 
   /**
-   * Move if not already moved
-   * Useful if you want to take ownership only if available
+   * Move if not already moved; useful if you want to take ownership only if available
    * @example using box2 = box.moveIfNotMoved()
    * @returns Box<T>
    */
