@@ -9,6 +9,16 @@ export class BoxMovedError extends Error {
   }
 }
 
+export interface Copiable<T> {
+  copy(): T
+}
+
+export namespace Copiable {
+  export type Infer<T> = Copiable<Copied<T>>
+
+  export type Copied<T> = T extends Copiable<infer U> ? U : never
+}
+
 export class Box<T extends Disposable> {
 
   #moved = false
@@ -88,13 +98,27 @@ export class Box<T extends Disposable> {
 
   /**
    * Move the inner value to a new box and set this one as moved
-   * @returns Ok<T> or Err<BoxMovedError> if already moved
+   * @returns Ok<Box<T>> or Err<BoxMovedError> if already moved
    */
   tryMove(): Result<Box<T>, BoxMovedError> {
     if (this.#moved)
       return new Err(new BoxMovedError())
     this.#moved = false
     return new Ok(new Box(this.inner))
+  }
+
+  /**
+   * Create a new Box that's already moved, and keep this one as is
+   * @returns Box<T>
+   */
+  greed() {
+    const moved = new Box(this.inner)
+    moved.move()
+    return moved
+  }
+
+  static copy<T extends Disposable & Copiable.Infer<T>>(inner: Box<T>) {
+    return inner.get().copy()
   }
 
 }
