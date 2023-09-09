@@ -10,16 +10,17 @@ export class BoxMovedError extends Error {
 }
 
 export interface Copiable<T> {
-  copy(): T
+  copyAndDispose(): T
 }
 
 export namespace Copiable {
+
   export type Infer<T> = Copiable<Copied<T>>
 
   export type Copied<T> = T extends Copiable<infer U> ? U : never
 }
 
-export class Box<T extends Disposable> {
+export class Box<T extends Disposable>  {
 
   moved = false
 
@@ -125,8 +126,13 @@ export class Box<T extends Disposable> {
     return moved
   }
 
-  static copy<T extends Disposable & Copiable.Infer<T>>(inner: Box<T>) {
-    return inner.get().copy()
+  /**
+   * Unwrap and call copyAndDispose()
+   * @param box 
+   * @returns 
+   */
+  copyAndDispose<T extends Disposable & Copiable.Infer<T>>(this: Box<T>) {
+    return this.unwrap().copyAndDispose()
   }
 
 }

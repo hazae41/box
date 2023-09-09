@@ -45,23 +45,39 @@ class Resource implements Disposable {
 
 }
 
+class Slice implements Disposable {
+
+  disposed = false;
+
+  [Symbol.dispose]() {
+    console.log("disposed lol")
+    this.disposed = true
+  }
+
+  copyAndDispose() {
+    this[Symbol.dispose]()
+    return "hello"
+  }
+
+}
+
 await test("holder", async ({ test, message }) => {
   console.log(message)
-  const r = new Resource()
-  const box = new Box(r)
+  const resource = new Resource()
+  const box = new Box(resource)
 
   {
     using a = new A(box)
     using b = a.toB()
   }
 
-  assert(r.disposed)
+  assert(resource.disposed)
 })
 
 await test("greed", async ({ test, message }) => {
   console.log(message)
 
-  const r = new Resource()
+  const resource = new Resource()
 
   function take(box: Box<Resource>) {
     using box2 = box.moveIfNotMoved()
@@ -72,13 +88,26 @@ await test("greed", async ({ test, message }) => {
    * This block will keep ownership of the box
    */
   {
-    using box = new Box(r)
+    using box = new Box(resource)
 
     take(box.greed())
     take(box.greed())
 
-    assert(!r.disposed)
+    assert(!resource.disposed)
   }
 
-  assert(r.disposed)
+  assert(resource.disposed)
 })
+
+await test("copyAndDispose", async ({ test, message }) => {
+  console.log(message)
+
+  const slice = new Slice()
+  const box = new Box(slice)
+
+  const copied = box.copyAndDispose()
+
+  assert(copied === "hello")
+  assert(slice.disposed)
+})
+
