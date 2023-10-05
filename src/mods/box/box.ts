@@ -9,17 +9,6 @@ export class BoxMovedError extends Error {
   }
 }
 
-export interface Copiable<T> {
-  copyAndDispose(): T
-}
-
-export namespace Copiable {
-
-  export type Infer<T> = Copiable<Copied<T>>
-
-  export type Copied<T> = T extends Copiable<infer U> ? U : never
-}
-
 export class Box<T extends Disposable>  {
 
   moved = false
@@ -124,15 +113,6 @@ export class Box<T extends Disposable>  {
     const moved = new Box(this.inner)
     moved.moved = true
     return moved
-  }
-
-  /**
-   * Unwrap and call copyAndDispose()
-   * @param box 
-   * @returns 
-   */
-  copyAndDispose<T extends Disposable & Copiable.Infer<T>>(this: Box<T>) {
-    return this.unwrap().copyAndDispose()
   }
 
 }
