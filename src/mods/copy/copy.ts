@@ -1,7 +1,7 @@
 /**
  * An object whose bytes can be copied
  */
-export interface Copiable<T = Uint8Array> {
+export interface Copiable<T = Uint8Array> extends Disposable {
 
   /**
    * Disposable bytes
@@ -11,7 +11,7 @@ export interface Copiable<T = Uint8Array> {
   /**
    * Copy and dispose bytes
    */
-  copyAndDispose(): T
+  copyAndDispose(): Copied<T>
 
 }
 
@@ -42,12 +42,8 @@ export class Copied<T = Uint8Array> implements Copiable<T> {
     return new Copied(bytes)
   }
 
-  static from(buffer: ArrayBuffer) {
-    return new Copied(new Uint8Array(buffer))
-  }
-
   copyAndDispose() {
-    return this.bytes
+    return this
   }
 
 }

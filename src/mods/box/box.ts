@@ -1,4 +1,5 @@
 import { Err, Ok, Result } from "@hazae41/result"
+import { Copiable } from "mods/copy/copy.js"
 
 export class BoxMovedError extends Error {
   readonly #class = BoxMovedError
@@ -113,6 +114,10 @@ export class Box<T extends Disposable>  {
     const moved = new Box(this.inner)
     moved.moved = true
     return moved
+  }
+
+  copyAndDispose<T>(this: Box<Copiable<T>>) {
+    return new Box(this.unwrap().copyAndDispose())
   }
 
 }
