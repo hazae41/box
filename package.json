@@ -22,17 +22,17 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@hazae41/result": "^1.1.4"
+    "@hazae41/result": "^1.1.6"
   },
   "devDependencies": {
     "@hazae41/phobos": "^1.0.10",
     "@hazae41/symbol-dispose-polyfill": "^1.0.2",
     "@rollup/plugin-typescript": "^11.1.5",
-    "@types/node": "^20.8.2",
+    "@types/node": "^20.8.3",
     "rimraf": "^5.0.5",
-    "rollup": "^3.29.4",
-    "rollup-plugin-dts": "^6.0.2",
-    "rollup-plugin-node-externals": "^6.1.1",
+    "rollup": "^4.0.2",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-node-externals": "^6.1.2",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2"
   },

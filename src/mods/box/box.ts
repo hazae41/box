@@ -116,6 +116,11 @@ export class Box<T extends Disposable>  {
     return moved
   }
 
+  /**
+   * Unwrap, copy, and rewrap
+   * @param this 
+   * @returns 
+   */
   copyAndDispose<T>(this: Box<Copiable<T>>) {
     return new Box(this.unwrap().copyAndDispose())
   }
