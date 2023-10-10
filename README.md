@@ -42,3 +42,53 @@ class D {
   using box2 = box.move()
 }
 ```
+
+## Rules
+
+1. You can't pass a disposable object without wrapping it in a Box
+2. You can't hold a disposable object without wrapping it in a Box
+3. You can't hold a Box without owning it and disposing it after
+4. You can't return a Box without unwrapping it
+
+This means the typical object holding a Box looks like this
+
+```tsx
+class MyWrapper<T extends Disposable> {
+
+  private constructor(
+    /**
+     * Rule 2. hold as box
+     **/
+    readonly box: Box<T>
+  ) {}
+
+  [Symbol.dispose]() {
+    /**
+     * Rule 3. dispose any box you hold
+     **/
+    this.box[Symbol.dispose]()
+  }
+
+  static create<T extends Disposable>(box: Box<T>) {
+    /**
+     * Rule 3. own any box you want to hold
+     **/
+    return new MyWrapper(box.move())
+  }
+
+  use() {
+    /**
+     * Rule 1. only pass as box
+     **/
+    something(this.box)
+  }
+
+  export(): T {
+    /**
+     * Rule 4. unwrap on return
+     **/
+    return this.box.unwrap()
+  }
+
+}
+```
