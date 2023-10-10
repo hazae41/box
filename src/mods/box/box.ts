@@ -10,7 +10,7 @@ export class BoxMovedError extends Error {
   }
 }
 
-export class Box<T extends Disposable>  {
+export class Box<T extends Disposable> implements Disposable {
 
   moved = false
 
@@ -25,6 +25,10 @@ export class Box<T extends Disposable>  {
     if (this.moved)
       return
     this.inner[Symbol.dispose]()
+  }
+
+  static wrap<T extends Disposable>(inner: T) {
+    return new Box(inner)
   }
 
   /**

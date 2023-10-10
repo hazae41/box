@@ -11,4 +11,8 @@ export class Slot<T extends Disposable> implements Disposable {
     this.inner[Symbol.dispose]()
   }
 
+  static wrap<T extends Disposable>(inner: T) {
+    return new Slot(inner)
+  }
+
 }
