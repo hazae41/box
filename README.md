@@ -53,6 +53,8 @@ class D {
 This means the typical object holding a Box looks like this
 
 ```tsx
+import { Box } from "@hazae41/box"
+
 class MyWrapper<T extends Disposable> {
 
   private constructor(
