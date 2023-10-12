@@ -13,6 +13,16 @@ export interface Copiable<T = Uint8Array> extends Disposable {
    */
   copyAndDispose(): T
 
+  /**
+   * Free
+   */
+  free(): void
+
+  /**
+   * Free on next tick
+   */
+  freeNextTick(): this
+
 }
 
 export namespace Copiable {
@@ -44,6 +54,14 @@ export class Copied<T = Uint8Array> implements Copiable<T> {
 
   copyAndDispose() {
     return this.bytes
+  }
+
+  free(): void {
+    return
+  }
+
+  freeNextTick(): this {
+    return this
   }
 
 }

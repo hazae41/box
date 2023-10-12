@@ -55,12 +55,21 @@ class Slice implements Disposable, Copiable {
   disposed = false;
 
   [Symbol.dispose]() {
+    this.free()
+  }
+
+  free(): void {
     console.log("disposed lol")
     this.disposed = true
   }
 
+  freeNextTick(): this {
+    setTimeout(() => this.free(), 0)
+    return this
+  }
+
   copyAndDispose() {
-    this[Symbol.dispose]()
+    this.free()
     return this.bytes
   }
 
