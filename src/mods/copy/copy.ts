@@ -1,4 +1,4 @@
-export type BytesOrCopiable<N extends number> =
+export type BytesOrCopiable<N extends number = number> =
   | Uint8Array & { length: N }
   | Copiable<Uint8Array & { length: N }>
 
