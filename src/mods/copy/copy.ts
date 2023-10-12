@@ -1,7 +1,11 @@
+export type BytesOrCopiable<N extends number> =
+  | Uint8Array & { length: N }
+  | Copiable<Uint8Array & { length: N }>
+
 /**
  * An object whose bytes can be copied
  */
-export interface Copiable<T = Uint8Array> extends Disposable {
+export interface Copiable<T extends Uint8Array = Uint8Array> extends Disposable {
 
   /**
    * Disposable bytes
@@ -36,7 +40,7 @@ export namespace Copiable {
 /**
  * A copiable whose bytes are already copied
  */
-export class Copied<T = Uint8Array> implements Copiable<T> {
+export class Copied<T extends Uint8Array = Uint8Array> implements Copiable<T> {
 
   /**
    * A copiable whose bytes are already copied
@@ -48,7 +52,7 @@ export class Copied<T = Uint8Array> implements Copiable<T> {
 
   [Symbol.dispose]() { }
 
-  static new<T>(bytes: T) {
+  static new<T extends Uint8Array>(bytes: T) {
     return new Copied(bytes)
   }
 
