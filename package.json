@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@hazae41/box",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Rust-like Box for TypeScript",
   "homepage": "https://github.com/hazae41/box",
   "repository": "github:hazae41/box",
