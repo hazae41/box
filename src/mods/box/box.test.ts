@@ -1,6 +1,6 @@
 import { assert, test } from "@hazae41/phobos"
 import "@hazae41/symbol-dispose-polyfill"
-import { Copiable, Copied } from "index.js"
+import { Copiable } from "index.js"
 import { Box } from "./box.js"
 
 class A<T extends Disposable> {
@@ -61,7 +61,7 @@ class Slice implements Disposable, Copiable {
 
   copyAndDispose() {
     this[Symbol.dispose]()
-    return new Copied(this.bytes)
+    return this.bytes
   }
 
 }
@@ -109,7 +109,7 @@ await test("copyAndDispose", async ({ test, message }) => {
 
   const slice = new Slice(new Uint8Array([1, 2, 3]))
   const box = new Box(slice)
-  box.copyAndDispose()
+  box.unwrap().copyAndDispose()
   assert(slice.disposed)
 })
 

@@ -1,5 +1,4 @@
 import { Err, Ok, Result } from "@hazae41/result"
-import { Copiable } from "mods/copy/copy.js"
 
 export class BoxMovedError extends Error {
   readonly #class = BoxMovedError
@@ -27,8 +26,24 @@ export class Box<T extends Disposable> implements Disposable {
     this.inner[Symbol.dispose]()
   }
 
+  /**
+   * Create a new Box
+   * @param inner 
+   * @returns 
+   */
   static new<T extends Disposable>(inner: T) {
     return new Box(inner)
+  }
+
+  /**
+   * Create a new Box that's already moved
+   * @param inner 
+   * @returns 
+   */
+  static greedy<T extends Disposable>(inner: T) {
+    const box = new Box(inner)
+    box.moved = true
+    return box
   }
 
   /**
@@ -118,15 +133,6 @@ export class Box<T extends Disposable> implements Disposable {
     const moved = new Box(this.inner)
     moved.moved = true
     return moved
-  }
-
-  /**
-   * Unwrap, copy, and rewrap
-   * @param this 
-   * @returns 
-   */
-  copyAndDispose<T>(this: Box<Copiable<T>>) {
-    return new Box(this.unwrap().copyAndDispose())
   }
 
 }

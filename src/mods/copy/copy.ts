@@ -11,7 +11,7 @@ export interface Copiable<T = Uint8Array> extends Disposable {
   /**
    * Copy and dispose bytes
    */
-  copyAndDispose(): Copied<T>
+  copyAndDispose(): T
 
 }
 
@@ -43,7 +43,7 @@ export class Copied<T = Uint8Array> implements Copiable<T> {
   }
 
   copyAndDispose() {
-    return this
+    return this.bytes
   }
 
 }
