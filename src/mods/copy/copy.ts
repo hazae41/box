@@ -1,6 +1,6 @@
 export type BytesOrCopiable<N extends number = number> =
-  | Uint8Array & { length: N }
-  | Copiable<Uint8Array & { length: N }>
+  | Uint8Array & { readonly length: N }
+  | Copiable<Uint8Array & { readonly length: N }>
 
 /**
  * An object whose bytes can be copied

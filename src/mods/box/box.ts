@@ -9,7 +9,11 @@ export class BoxMovedError extends Error {
   }
 }
 
-export class Box<T extends Disposable> implements Disposable {
+export interface MaybeDisposable {
+  [Symbol.dispose]?: () => void
+}
+
+export class Box<T extends MaybeDisposable> implements Disposable {
 
   moved = false
 
@@ -23,7 +27,7 @@ export class Box<T extends Disposable> implements Disposable {
   [Symbol.dispose]() {
     if (this.moved)
       return
-    this.inner[Symbol.dispose]()
+    this.inner[Symbol.dispose]?.()
   }
 
   /**
