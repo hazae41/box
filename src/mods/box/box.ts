@@ -50,12 +50,18 @@ export class Box<T extends MaybeDisposable> implements Disposable {
     return box
   }
 
+  get() {
+    if (this.moved)
+      return undefined
+    return this.inner
+  }
+
   /**
    * Just get the inner value
    * @returns T
    * @throws BoxMovedError if moved
    */
-  get(): T {
+  getOrThrow(): T {
     if (this.moved)
       throw new BoxMovedError()
     return this.inner
@@ -71,12 +77,19 @@ export class Box<T extends MaybeDisposable> implements Disposable {
     return new Ok(this.inner)
   }
 
+  unwrap() {
+    if (this.moved)
+      return undefined
+    this.moved = true
+    return this.inner
+  }
+
   /**
    * Get the inner value and set this as moved
    * @returns T
    * @throws BoxMovedError if already moved
    */
-  unwrap(): T {
+  unwrapOrThrow(): T {
     if (this.moved)
       throw new BoxMovedError()
     this.moved = true
@@ -94,12 +107,19 @@ export class Box<T extends MaybeDisposable> implements Disposable {
     return new Ok(this.inner)
   }
 
+  move() {
+    if (this.moved)
+      return undefined
+    this.moved = true
+    return new Box(this.inner)
+  }
+
   /**
    * Move the inner value to a new box and set this one as moved
    * @returns Box<T>
    * @throws BoxMovedError if already moved
    */
-  move() {
+  moveOrThrow() {
     if (this.moved)
       throw new BoxMovedError()
     this.moved = true
@@ -115,18 +135,6 @@ export class Box<T extends MaybeDisposable> implements Disposable {
       return new Err(new BoxMovedError())
     this.moved = true
     return new Ok(new Box(this.inner))
-  }
-
-  /**
-   * Move if not already moved; useful if you want to take ownership only if available
-   * @example using box2 = box.moveIfNotMoved()
-   * @returns Box<T>
-   */
-  moveIfNotMoved() {
-    if (this.moved)
-      return this
-    this.moved = false
-    return new Box(this.inner)
   }
 
   /**

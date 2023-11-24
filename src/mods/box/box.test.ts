@@ -14,7 +14,7 @@ class A<T extends Disposable> {
   }
 
   toB() {
-    return new B(this.inner.move())
+    return new B(this.inner.moveOrThrow())
   }
 
 }
@@ -30,7 +30,7 @@ class B<T extends Disposable> {
   }
 
   toA() {
-    return new A(this.inner.move())
+    return new A(this.inner.moveOrThrow())
   }
 
 }
@@ -118,7 +118,7 @@ await test("copyAndDispose", async ({ test, message }) => {
 
   const slice = new Slice(new Uint8Array([1, 2, 3]))
   const box = new Box(slice)
-  box.unwrap().copyAndDispose()
+  box.unwrapOrThrow().copyAndDispose()
   assert(slice.disposed)
 })
 
