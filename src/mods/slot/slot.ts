@@ -1,19 +1,17 @@
-import { MaybeDisposable } from "index.js"
-
 /**
  * A disposable whose reference can change
  */
-export class Slot<T extends MaybeDisposable> implements Disposable {
+export class Slot<T> {
 
   constructor(
     public inner: T
   ) { }
 
-  [Symbol.dispose]() {
-    this.inner[Symbol.dispose]?.()
+  [Symbol.dispose](this: Slot<Disposable>) {
+    this.inner[Symbol.dispose]()
   }
 
-  static new<T extends Disposable>(inner: T) {
+  static new<T>(inner: T) {
     return new Slot(inner)
   }
 

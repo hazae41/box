@@ -9,13 +9,9 @@ export class BoxMovedError extends Error {
   }
 }
 
-export interface MaybeDisposable {
-  [Symbol.dispose]?: () => void
-}
+export class Box<T>  {
 
-export class Box<T extends MaybeDisposable> implements Disposable {
-
-  moved = false
+  #moved = false
 
   /**
    * Object that uniquely owns a type T and can dispose it
@@ -24,10 +20,10 @@ export class Box<T extends MaybeDisposable> implements Disposable {
     readonly inner: T
   ) { }
 
-  [Symbol.dispose]() {
-    if (this.moved)
+  [Symbol.dispose](this: Box<Disposable>) {
+    if (this.#moved)
       return
-    this.inner[Symbol.dispose]?.()
+    this.inner[Symbol.dispose]()
   }
 
   /**
@@ -35,7 +31,7 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @param inner 
    * @returns 
    */
-  static new<T extends Disposable>(inner: T) {
+  static new<T>(inner: T) {
     return new Box(inner)
   }
 
@@ -44,14 +40,18 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @param inner 
    * @returns 
    */
-  static greedy<T extends Disposable>(inner: T) {
+  static greedy<T>(inner: T) {
     const box = new Box(inner)
-    box.moved = true
+    box.#moved = true
     return box
   }
 
+  get moved() {
+    return this.#moved
+  }
+
   get() {
-    if (this.moved)
+    if (this.#moved)
       return undefined
     return this.inner
   }
@@ -62,7 +62,7 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @throws BoxMovedError if moved
    */
   getOrThrow(): T {
-    if (this.moved)
+    if (this.#moved)
       throw new BoxMovedError()
     return this.inner
   }
@@ -72,15 +72,15 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @returns Ok<T> or Err<BoxMovedError> if moved
    */
   tryGet(): Result<T, BoxMovedError> {
-    if (this.moved)
+    if (this.#moved)
       return new Err(new BoxMovedError())
     return new Ok(this.inner)
   }
 
   unwrap() {
-    if (this.moved)
+    if (this.#moved)
       return undefined
-    this.moved = true
+    this.#moved = true
     return this.inner
   }
 
@@ -90,9 +90,9 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @throws BoxMovedError if already moved
    */
   unwrapOrThrow(): T {
-    if (this.moved)
+    if (this.#moved)
       throw new BoxMovedError()
-    this.moved = true
+    this.#moved = true
     return this.inner
   }
 
@@ -101,16 +101,16 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @returns Ok<T> or Err<BoxMovedError> if already moved
    */
   tryUnwrap(): Result<T, BoxMovedError> {
-    if (this.moved)
+    if (this.#moved)
       return new Err(new BoxMovedError())
-    this.moved = true
+    this.#moved = true
     return new Ok(this.inner)
   }
 
   move() {
-    if (this.moved)
+    if (this.#moved)
       return undefined
-    this.moved = true
+    this.#moved = true
     return new Box(this.inner)
   }
 
@@ -120,9 +120,9 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @throws BoxMovedError if already moved
    */
   moveOrThrow() {
-    if (this.moved)
+    if (this.#moved)
       throw new BoxMovedError()
-    this.moved = true
+    this.#moved = true
     return new Box(this.inner)
   }
 
@@ -131,9 +131,9 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    * @returns Ok<Box<T>> or Err<BoxMovedError> if already moved
    */
   tryMove(): Result<Box<T>, BoxMovedError> {
-    if (this.moved)
+    if (this.#moved)
       return new Err(new BoxMovedError())
-    this.moved = true
+    this.#moved = true
     return new Ok(new Box(this.inner))
   }
 
@@ -143,7 +143,7 @@ export class Box<T extends MaybeDisposable> implements Disposable {
    */
   greed() {
     const moved = new Box(this.inner)
-    moved.moved = true
+    moved.#moved = true
     return moved
   }
 
