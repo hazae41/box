@@ -94,8 +94,7 @@ await test("greed", async ({ test, message }) => {
   const resource = new Resource()
 
   function take(box: Box<Resource>) {
-    using box2 = box.moveIfNotMoved()
-    assert(!box2.inner.disposed)
+    assert(box.moved === true)
   }
 
   /**
