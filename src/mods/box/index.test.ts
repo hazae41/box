@@ -1,7 +1,7 @@
-import { assert, test } from "@hazae41/phobos"
 import "@hazae41/symbol-dispose-polyfill"
-import { Copiable } from "index.js"
-import { Box } from "./box.js"
+
+import { assert, test } from "@hazae41/phobos"
+import { Box } from "./index.js"
 
 class A<T extends Disposable> {
 
@@ -40,43 +40,14 @@ class Resource implements Disposable {
   disposed = false;
 
   [Symbol.dispose]() {
-    console.log("disposed lol")
     this.disposed = true
-  }
-
-}
-
-class Slice implements Disposable, Copiable {
-
-  constructor(
-    readonly bytes: Uint8Array
-  ) { }
-
-  disposed = false;
-
-  [Symbol.dispose]() {
-    this.free()
-  }
-
-  free(): void {
-    console.log("disposed lol")
-    this.disposed = true
-  }
-
-  freeNextTick(): this {
-    setTimeout(() => this.free(), 0)
-    return this
-  }
-
-  copyAndDispose() {
-    this.free()
-    return this.bytes
   }
 
 }
 
 await test("holder", async ({ test, message }) => {
   console.log(message)
+
   const resource = new Resource()
   const box = new Box(resource)
 
@@ -88,9 +59,7 @@ await test("holder", async ({ test, message }) => {
   assert(resource.disposed)
 })
 
-await test("greed", async ({ test, message }) => {
-  console.log(message)
-
+await test("dummy", async ({ test, message }) => {
   const resource = new Resource()
 
   function take(box: Box<Resource>) {
@@ -103,21 +72,11 @@ await test("greed", async ({ test, message }) => {
   {
     using box = new Box(resource)
 
-    take(box.greed())
-    take(box.greed())
+    take(Box.createAsMoved(box.getOrThrow()))
+    take(Box.createAsMoved(box.getOrThrow()))
 
     assert(!resource.disposed)
   }
 
   assert(resource.disposed)
 })
-
-await test("copyAndDispose", async ({ test, message }) => {
-  console.log(message)
-
-  const slice = new Slice(new Uint8Array([1, 2, 3]))
-  const box = new Box(slice)
-  box.unwrapOrThrow().copyAndDispose()
-  assert(slice.disposed)
-})
-

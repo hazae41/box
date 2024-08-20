@@ -1,3 +1,4 @@
-export * from "./box/box.js";
-export * from "./copy/copy.js";
-export * from "./slot/slot.js";
+export * from "./auto/index.js";
+export * from "./box/index.js";
+export * from "./slot/index.js";
+

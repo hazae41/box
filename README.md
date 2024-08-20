@@ -16,81 +16,141 @@ npm i @hazae41/box
 - Similar to Rust
 - Can hold data
 - Unit-tested
-- Uses Result from `@hazae41/result`
 
 ## Usage
 
-The `Box<T extends Disposable>` will:
-- hold a disposable object `T`
-- only dispose the object if it still owns it
-- no longer own it if the box is moved
+### Box<T>
+
+A reference that can be unset
 
 ```typescript
 import { Box } from "@hazae41/box"
 
-class D {
+class Resource {
+
   [Symbol.dispose]() { 
-    console.log("it should only happen once")
+    console.log("This should only happen once")
   }
+
 }
 
 /**
- * At the end of this block, D will only be disposed once
+ * Resource will only be disposed once
  */
 {
-  using box = new Box(new D())
-  using box2 = box.move()
+  using box = new Box(new Resource())
+  using box2 = box.moveOrThrow()
 }
 ```
 
-## Rules
+### Slot<T>
 
-1. You can't pass a disposable object without wrapping it in a Box
-2. You can't hold a disposable object without wrapping it in a Box
-3. You can't hold a Box without owning it and disposing it after
-4. You can't return a Box without unwrapping it
-
-This means the typical object holding a Box looks like this
+A reference that can change
 
 ```tsx
-import { Box } from "@hazae41/box"
+class Pointer {
 
-class MyWrapper<T extends Disposable> {
-
-  private constructor(
-    /**
-     * Rule 2. hold as box
-     **/
-    readonly box: Box<T>
+  constructor(
+    readonly value: number
   ) {}
 
   [Symbol.dispose]() {
-    /**
-     * Rule 3. dispose any box you hold
-     **/
-    this.box[Symbol.dispose]()
+    free(this.value)
   }
 
-  static create<T extends Disposable>(box: Box<T>) {
-    /**
-     * Rule 3. own any box you want to hold
-     **/
-    return new MyWrapper(box.move())
-  }
-
-  use() {
-    /**
-     * Rule 1. only pass as box
-     **/
-    something(this.box)
-  }
-
-  export(): T {
-    /**
-     * Rule 4. unwrap on return
-     **/
-    return this.box.unwrap()
+  plus(pointer: Pointer) {
+    return new Pointer(this.value + pointer.value)
   }
 
 }
+
+class Null extends Pointer {
+  
+  [Symbol.dispose]() {}
+
+}
+
+function* getPointersOrThrow() {
+  yield new Pointer(123)
+  yield new Pointer(456)
+  throw new Error()
+  yield new Pointer(789)
+}
+
+{
+  using result = new Slot(new Null())
+
+  for (const pointer of getPointersOrThrow()) {
+    using a = pointer
+    const b = result.get()
+
+    result.set(a.plus(b))
+
+    using _ = b
+  }
+
+  console.log(result.get().value)
+}
+```
+
+The slot is correctly disposed if `getNumbersOrThrow()` throws in the midst of the loop
+
+### Auto<T>
+
+A reference that will be disposed when garbage collected
+
+```tsx
+class Pointer {
+
+  constructor(
+    readonly value: number
+  ) {}
+
+  [Symbol.dispose]() {
+    free(this.value)
+  }
+
+}
+
+class MyObject {
+
+  constructor(
+    readonly pointer: Auto<Pointer>
+  ) {}
+
+  something() {
+    something(this.pointer.get().value)
+  }
+
+}
+
+{
+  const pointer = new Auto(new Pointer(123))
+  const object = new MyObject(pointer)
+}
+```
+
+The pointer will be freed when the object will be garbage collected
+
+But `Auto<T>` can be disposed to unregister itself from garbage collection
+
+```tsx
+function unwrap<T extends Disposable>(auto: Auto<T>) {
+  using _ = auto
+  return auto.get()
+}
+
+const raw = new Pointer(123)
+const auto = new Auto(raw)
+using raw2 = unwrap(auto)
+```
+
+The pointer will need to be manually freed
+
+You can also use `.unwrap()` to do this
+
+```tsx
+const raw = new Pointer(123)
+const auto = new Auto(raw)
+using raw2 = auto.unwrap()
 ```

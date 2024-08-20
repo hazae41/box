@@ -1,1 +1,2 @@
-export * from "./box/box.test.js";
+export * from "./auto/index.test.js";
+export * from "./box/index.test.js";
