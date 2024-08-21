@@ -8,12 +8,16 @@ export class BoxMovedError extends Error {
   }
 }
 
+/**
+ * A movable reference
+ */
 export class Box<T> {
 
   #moved = false
 
   /**
-   * A reference that can be unset
+   * A movable reference
+   * @param inner 
    */
   constructor(
     readonly inner: T

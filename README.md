@@ -1,6 +1,6 @@
-# Box
+# Box and its friends
 
-Rust-like Box for TypeScript
+Rust-like Box and similar objects for TypeScript
 
 ```bash
 npm i @hazae41/box
@@ -19,9 +19,9 @@ npm i @hazae41/box
 
 ## Usage
 
-### Box<T>
+### `Box<T>`
 
-A reference that can be unset
+A movable reference
 
 ```typescript
 import { Box } from "@hazae41/box"
@@ -29,23 +29,28 @@ import { Box } from "@hazae41/box"
 class Resource {
 
   [Symbol.dispose]() { 
-    console.log("This should only happen once")
+    console.log("Disposed")
   }
 
 }
 
+async function take(box: Box<Resource>) {
+  using box2 = box.moveOrThrow()
+  await doSomethingOrThrow()
+}
+
 /**
- * Resource will only be disposed once
+ * Resource will only be disposed after the promise settles
  */
 {
   using box = new Box(new Resource())
-  using box2 = box.moveOrThrow()
+  take(box).catch(console.error)
 }
 ```
 
-### Slot<T>
+### `Slot<T>`
 
-A reference that can change
+A mutable reference
 
 ```tsx
 class Pointer {
@@ -89,9 +94,11 @@ function* getPointersOrThrow() {
 
 Everything is correctly disposed if `getNumbersOrThrow()` throws in the midst of the loop
 
-### Auto<T>
+### `Auto<T>`
 
 A reference that will be disposed when garbage collected
+
+These references are NOT guaranteed to be disposed
 
 ```tsx
 class Pointer {
@@ -126,7 +133,9 @@ class MyObject {
 
 The pointer will be freed when the object will be garbage collected
 
-But `Auto<T>` can be disposed to unregister itself from garbage collection
+---
+
+An auto can be disposed to unregister itself from garbage collection
 
 ```tsx
 function unwrap<T extends Disposable>(auto: Auto<T>) {
@@ -148,3 +157,63 @@ const raw = new Pointer(123)
 const auto = new Auto(raw)
 using raw2 = auto.unwrap()
 ```
+
+### `Tick<T>`
+
+A reference that will be disposed after some delay (0 by default)
+
+These references are guaranteed to be disposed
+
+```tsx
+{
+  const pointer = new Tick(new Pointer(123))
+
+  await doSomethingOrThrow()
+
+  // Pointer is guaranteed to be freed here
+}
+```
+
+This is useful to prevent WebAssembly memory from growing without using `using`
+
+### `Once<T>`
+
+A reference that can only be disposed once
+
+```tsx
+class Socket {
+
+  constructor(
+    readonly socket: WebSocket
+  ) {}
+
+  [Symbol.dispose]() {
+    this.socket.close()
+  }
+
+  get() {
+    return this.socket
+  }
+
+}
+
+function terminate(socket: Once<Socket>) {
+  using _ = socket
+  
+  socket.get().send("closing")
+}
+
+{
+  const socket = new Auto(new Once(new Socket(raw)))
+
+  if (something) {
+    terminate(socket.get())
+    return
+    // Will be closed here
+  } 
+  
+  // Will be closed on garbage collection
+}
+```
+
+This can enable mixed behaviour where a resource can be disposed on demand or disposed on garbage collection

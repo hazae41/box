@@ -1,8 +1,10 @@
-
+/**
+ * A mutable reference
+ */
 export class Slot<T> {
 
   /**
-   * A reference that can change
+   * A mutable reference
    * @param inner 
    */
   constructor(

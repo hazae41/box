@@ -1,3 +1,6 @@
+/**
+ * A reference that will be disposed when garbage collected
+ */
 export class Auto<T extends Disposable> {
 
   static readonly cleanup = (x: Disposable) => x[Symbol.dispose]?.()
@@ -5,6 +8,7 @@ export class Auto<T extends Disposable> {
 
   /**
    * A reference that will be disposed when garbage collected
+   * @param inner 
    */
   constructor(
     readonly inner: T
@@ -27,13 +31,17 @@ export class Auto<T extends Disposable> {
 
 }
 
+/**
+ * A reference that will be disposed when garbage collected
+ */
 export class AsyncAuto<T extends AsyncDisposable> {
 
   static readonly cleanup = (x: AsyncDisposable) => x[Symbol.asyncDispose]?.().then(undefined, console.error)
   static readonly registry = new FinalizationRegistry(AsyncAuto.cleanup)
 
   /**
-   * A readonly slot that will be automatically disposed
+   * A reference that will be disposed when garbage collected
+   * @param inner 
    */
   constructor(
     readonly inner: T
