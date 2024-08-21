@@ -219,7 +219,7 @@ function terminate(socket: Once<Socket>) {
 
 This can enable mixed behaviour where a resource can be disposed on demand or disposed on garbage collection
 
-### `Defer<T>`
+### `Deferred<T>`
 
 A reference to a callback that will be called when disposed
 
@@ -230,17 +230,17 @@ function waitOrThrow(socket: WebSocket) {
   const onOpen = () => future.resolve()
   
   socket.addEventListener("open", onOpen, { passive: true })
-  using _0 = new Defer(() => socket.removeEventListener("open", onOpen))
+  using _0 = new Deferred(() => socket.removeEventListener("open", onOpen))
 
   const onClose = () => future.reject(new Error("Closed"))
 
   socket.addEventListener("close", onClose, { passive: true })
-  using _1 = new Defer(() => socket.removeEventListener("close", onClose))
+  using _1 = new Deferred(() => socket.removeEventListener("close", onClose))
 
   const onError = () => future.reject(new Error("Errored"))
 
   socket.addEventListener("error", onError, { passive: true })
-  using _2 = new Defer(() => socket.removeEventListener("error", onError))
+  using _2 = new Deferred(() => socket.removeEventListener("error", onError))
 
   return await future.promise
 }
@@ -265,7 +265,7 @@ using stack = new Box(new Once(new Stack()))
 
 stack.getOrThrow().get().push(new Resource())
 
-stack.getOrThrow().get().push(new Defer(() => console.log("Disposed")))
+stack.getOrThrow().get().push(new Deferred(() => console.log("Disposed")))
 
 using stack2 = stack.moveOrThrow()
 ```
@@ -277,7 +277,7 @@ using stack = new Box(new Stack())
 
 stack.getOrThrow().push(new Resource())
 
-stack.getOrThrow().push(new Defer(() => console.log("Disposed")))
+stack.getOrThrow().push(new Deferred(() => console.log("Disposed")))
 
 using stack2 = stack.moveOrThrow()
 ```
