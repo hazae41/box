@@ -15,6 +15,7 @@ npm i @hazae41/box
 - No external dependencies
 - Similar to Rust
 - Can hold data
+- Composable
 - Unit-tested
 
 ## Usage
