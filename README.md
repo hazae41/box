@@ -255,7 +255,7 @@ using stack = new Stack()
 
 stack.push(new Resource())
 
-stack.push(new Defer(() => console.log("Disposed")))
+stack.push(new Deferred(() => console.log("Disposed")))
 ```
 
 You can also imitate `DisposableStack` behaviour with `Box<Once<Stack>>`
