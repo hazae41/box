@@ -281,3 +281,59 @@ stack.getOrThrow().push(new Defer(() => console.log("Disposed")))
 
 using stack2 = stack.moveOrThrow()
 ```
+
+### Why not use `DisposableStack`?
+
+DisposableStack already combines many of these concepts. 
+
+You can see `DisposableStack` as a `Box<Once<Stack>>`.
+
+But using `DisposableStack` can lead to many issues in your code.
+
+1. You can opt-out `Box<T>` behavior
+
+When you use `DisposableStack`, you allow the developer to use `move()`
+
+This makes your code unpredictable if you didn't expect a `DisposableStack` to be moved.
+
+When you get passed a `DisposableStack` you have to check if it is not moved.
+
+While this may be useful in some situations, it may lead to unnecessary code.
+
+Whereas when using `Box<Stack>`, you explicitly allow it to be moved.
+
+And when just using `Stack`, you explicitly disallow it to be moved.
+
+2. You can opt-out `Once<T>` behavior
+
+When you use `DisposableStack`, you can only dispose it once.
+
+While it prevents bugs related to double-dispose, it can prevent other bugs from being discovered.
+
+You're not supposed to dispose a resource multiple times, and doing so is a bug from a logic issue.
+
+When using `DisposableStack`, you allow this bug to remain undiscovered because `Once<T>` protects you.
+
+When just using `Stack`, you can fix your code to avoid double-dispose instead of relying on this protection.
+
+3. You can use code that accepts `Box<T>`
+
+Suppose we have an external function that accepts any `Box<T>`.
+
+When using `DisposableStack` as `T`, you have to wrap it into `Box<DisposableStack>`.
+
+This leads to extra burden because the stack can be moved twice.
+
+Once in `Box<T>` and once in `DisposableStack`.
+
+Whereas when using `Box<Stack>` it can only be boxed once.
+
+4. You can use code that accepts `Once<T>`
+
+Same with `Once<DisposableStack>` instead of `Once<Stack>`.
+
+You have two different ways of checking if the stack has already been disposed.
+
+This leads to extra code, extra logic burden, and possibly unexpected behavior.
+
+When you use the standardized `Once<T>` in all your code, you are safe from this.
