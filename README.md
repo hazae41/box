@@ -326,7 +326,7 @@ This leads to extra burden because the stack can be moved twice.
 
 Once in `Box<T>` and once in `DisposableStack`.
 
-Whereas when using `Box<Stack>` it can only be boxed once.
+Whereas when using `Box<Stack>` it can only be moved once.
 
 4. You can use code that accepts `Once<T>`
 
