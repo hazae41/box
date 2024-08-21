@@ -16,7 +16,7 @@ class Resource implements Disposable {
 }
 
 await test("auto", async ({ test, message }) => {
-  console.log(message)
+  console.log(`--- ${message} ---`)
 
   const resource = new Resource()
 

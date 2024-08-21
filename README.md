@@ -64,12 +64,6 @@ class Pointer {
 
 }
 
-class Null extends Pointer {
-  
-  [Symbol.dispose]() {}
-
-}
-
 function* getPointersOrThrow() {
   yield new Pointer(123)
   yield new Pointer(456)
@@ -78,7 +72,7 @@ function* getPointersOrThrow() {
 }
 
 {
-  using result = new Slot(new Null())
+  using result = new Slot(new Pointer(1))
 
   for (const pointer of getPointersOrThrow()) {
     using a = pointer
@@ -93,7 +87,7 @@ function* getPointersOrThrow() {
 }
 ```
 
-The slot is correctly disposed if `getNumbersOrThrow()` throws in the midst of the loop
+Everything is correctly disposed if `getNumbersOrThrow()` throws in the midst of the loop
 
 ### Auto<T>
 

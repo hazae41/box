@@ -46,6 +46,8 @@ class Resource implements Disposable {
 }
 
 await test("holder", async ({ test, message }) => {
+  console.log(`--- ${message} ---`)
+
   console.log(message)
 
   const resource = new Resource()
@@ -60,6 +62,8 @@ await test("holder", async ({ test, message }) => {
 })
 
 await test("dummy", async ({ test, message }) => {
+  console.log(`--- ${message} ---`)
+
   const resource = new Resource()
 
   function take(box: Box<Resource>) {
