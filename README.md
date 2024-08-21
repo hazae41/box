@@ -93,7 +93,7 @@ function* getPointersOrThrow() {
 }
 ```
 
-Everything is correctly disposed if `getNumbersOrThrow()` throws in the midst of the loop
+Everything is correctly disposed if `getPointersOrThrow()` throws in the midst of the loop
 
 ### `Auto<T>`
 
