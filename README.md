@@ -161,7 +161,7 @@ using raw2 = auto.unwrap()
 
 ### `Tick<T>`
 
-A reference that will be disposed after some delay (0 by default)
+A reference that will be disposed after some delay
 
 These references are guaranteed to be disposed
 
