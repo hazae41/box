@@ -1,7 +1,17 @@
-import "@hazae41/symbol-dispose-polyfill"
+import "@hazae41/symbol-dispose-polyfill";
 
-import { assert, test } from "@hazae41/phobos"
-import { Box } from "./index.js"
+import { assert, test } from "@hazae41/phobos";
+import { Box } from "./index.js";
+
+class Resource implements Disposable {
+
+  disposed = false;
+
+  [Symbol.dispose]() {
+    this.disposed = true
+  }
+
+}
 
 class A<T extends Disposable> {
 
@@ -31,16 +41,6 @@ class B<T extends Disposable> {
 
   toA() {
     return new A(this.inner.moveOrThrow())
-  }
-
-}
-
-class Resource implements Disposable {
-
-  disposed = false;
-
-  [Symbol.dispose]() {
-    this.disposed = true
   }
 
 }
@@ -80,6 +80,29 @@ await test("dummy", async ({ test, message }) => {
     take(Box.createAsMoved(box.getOrThrow()))
 
     assert(!resource.disposed)
+  }
+
+  assert(resource.disposed)
+})
+
+await test("borrow", async ({ test, message }) => {
+  console.log(`--- ${message} ---`)
+
+  const resource = new Resource()
+
+  {
+    using box = new Box(resource)
+
+    {
+      using borrow = box.borrowOrThrow()
+      const inner = borrow.getOrThrow()
+
+      assert(inner === resource)
+
+      assert(box.borrowed === true)
+    }
+
+    assert(box.borrowed === false)
   }
 
   assert(resource.disposed)

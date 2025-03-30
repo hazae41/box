@@ -19,6 +19,8 @@ export class NotBorrowedError extends Error {
 }
 
 export interface Borrowable<T> {
+  readonly inner: T
+
   readonly borrowed: boolean
 
   borrowOrNull(): Nullable<Borrow<T>>
@@ -43,8 +45,24 @@ export class Borrow<T> {
     this.parent.returnOrThrow()
   }
 
+  get inner() {
+    return this.parent.inner
+  }
+
   get borrowed() {
     return this.#borrowed
+  }
+
+  getOrNull(): Nullable<T> {
+    if (this.#borrowed)
+      return
+    return this.inner
+  }
+
+  getOrThrow(): T {
+    if (this.#borrowed)
+      throw new BorrowedError()
+    return this.inner
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
