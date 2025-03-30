@@ -22,7 +22,7 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
-    "@hazae41/future": "^1.0.3",
+    "@hazae41/future": "^2.0.1",
     "@hazae41/phobos": "^1.0.10",
     "@hazae41/symbol-dispose-polyfill": "^1.0.2",
     "@rollup/plugin-typescript": "^11.1.6",

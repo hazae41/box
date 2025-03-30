@@ -1,3 +1,4 @@
+import { Future } from "@hazae41/future"
 import { Nullable } from "libs/nullable/index.js"
 
 export class BorrowedError extends Error {
@@ -33,6 +34,8 @@ export class Borrow<T> {
 
   #borrowed = false
 
+  #resolveOnReturn = Future.resolve()
+
   constructor(
     readonly parent: Borrowable<T>
   ) { }
@@ -53,6 +56,10 @@ export class Borrow<T> {
     return this.#borrowed
   }
 
+  get resolveOnReturn() {
+    return this.#resolveOnReturn.promise
+  }
+
   getOrNull(): Nullable<T> {
     if (this.#borrowed)
       return
@@ -70,6 +77,8 @@ export class Borrow<T> {
       return
     this.#borrowed = true
 
+    this.#resolveOnReturn = new Future()
+
     return new Borrow(this)
   }
 
@@ -78,6 +87,8 @@ export class Borrow<T> {
       throw new BorrowedError()
     this.#borrowed = true
 
+    this.#resolveOnReturn = new Future()
+
     return new Borrow(this)
   }
 
@@ -85,6 +96,8 @@ export class Borrow<T> {
     if (!this.#borrowed)
       throw new NotBorrowedError()
     this.#borrowed = false
+
+    this.#resolveOnReturn.resolve()
   }
 
 }

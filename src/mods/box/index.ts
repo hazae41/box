@@ -1,3 +1,4 @@
+import { Future } from "@hazae41/future"
 import { Nullable } from "libs/nullable/index.js"
 import { Borrow, BorrowedError, NotBorrowedError } from "mods/borrow/index.js"
 
@@ -21,6 +22,8 @@ export type BoxState =
 export class Box<T> {
 
   #state = "owned"
+
+  #resolveOnReturn = Future.resolve()
 
   /**
    * An ownable reference
@@ -66,6 +69,10 @@ export class Box<T> {
 
   get borrowed() {
     return this.#state === "borrowed"
+  }
+
+  get resolveOnReturn() {
+    return this.#resolveOnReturn.promise
   }
 
   /**
@@ -150,6 +157,8 @@ export class Box<T> {
       return
     this.#state = "borrowed"
 
+    this.#resolveOnReturn = new Future()
+
     return new Borrow(this)
   }
 
@@ -160,6 +169,8 @@ export class Box<T> {
       throw new BorrowedError()
     this.#state = "borrowed"
 
+    this.#resolveOnReturn = new Future()
+
     return new Borrow(this)
   }
 
@@ -167,6 +178,8 @@ export class Box<T> {
     if (!this.borrowed)
       throw new NotBorrowedError()
     this.#state = "owned"
+
+    this.#resolveOnReturn.resolve()
   }
 
 }
