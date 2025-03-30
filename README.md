@@ -37,12 +37,18 @@ class Resource {
 
 async function borrow(box: Box<Resource>) {
   using borrow = box.borrowOrThrow()
-  await doSomethingOrThrow()
+  const resource = borrow.getOrThrow()
+
+  await doSomethingOrThrow(resource)
+
+  // Returned to owner here
 }
 
 async function move(box: Box<Resource>) {
   using box2 = box.moveOrThrow()
-  await doSomethingOrThrow()
+  const resource = box2.getOrThrow()
+
+  await doSomethingOrThrow(resource)
 
   // Disposed here
 }
