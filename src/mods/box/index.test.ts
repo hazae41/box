@@ -90,17 +90,23 @@ await test("borrow", async ({ test, message }) => {
 
   const resource = new Resource()
 
+  async function borrow(box: Box<Resource>) {
+    using borrow = box.borrowOrThrow()
+    const inner = borrow.getOrThrow()
+
+    assert(inner === resource)
+
+    await new Promise(ok => setTimeout(ok, 1000))
+
+    assert(box.borrowed === true)
+  }
+
   {
     using box = new Box(resource)
 
-    {
-      using borrow = box.borrowOrThrow()
-      const inner = borrow.getOrThrow()
+    borrow(box)
 
-      assert(inner === resource)
-
-      assert(box.borrowed === true)
-    }
+    await box.resolveOnReturn
 
     assert(box.borrowed === false)
   }
