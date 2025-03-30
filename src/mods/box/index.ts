@@ -1,22 +1,29 @@
+import { Nullable } from "libs/nullable/index.js"
+import { Borrow, BorrowedError, NotBorrowedError } from "mods/borrow/index.js"
 
-export class BoxMovedError extends Error {
-  readonly #class = BoxMovedError
+export class MovedError extends Error {
+  readonly #class = MovedError
   readonly name = this.#class.name
 
   constructor() {
-    super(`Box has been moved`)
+    super(`Resource has been moved`)
   }
 }
 
+export type BoxState =
+  | "owned"
+  | "moved"
+  | "borrowed"
+
 /**
- * A movable reference
+ * An ownable reference
  */
 export class Box<T> {
 
-  #moved = false
+  #state = "owned"
 
   /**
-   * A movable reference
+   * An ownable reference
    * @param inner 
    */
   constructor(
@@ -24,14 +31,18 @@ export class Box<T> {
   ) { }
 
   [Symbol.dispose](this: Box<Disposable>) {
-    if (this.#moved)
+    if (this.moved)
       return
+    if (this.borrowed)
+      throw new BorrowedError()
     this.inner[Symbol.dispose]?.()
   }
 
   async [Symbol.asyncDispose](this: Box<AsyncDisposable>) {
-    if (this.#moved)
+    if (this.moved)
       return
+    if (this.borrowed)
+      throw new BorrowedError()
     await this.inner[Symbol.asyncDispose]?.()
   }
 
@@ -40,57 +51,69 @@ export class Box<T> {
   }
 
   static createAsMoved<T>(inner: T) {
-    const dummy = new Box(inner)
-    dummy.#moved = true
-    return dummy
+    const box = new Box(inner)
+    box.#state = "moved"
+    return box
+  }
+
+  get owned() {
+    return this.#state === "owned"
   }
 
   get moved() {
-    return this.#moved
+    return this.#state === "moved"
+  }
+
+  get borrowed() {
+    return this.#state === "borrowed"
   }
 
   /**
-   * Get the value or null-like if moved
-   * @returns T or null-like if moved
+   * Get the value or null-like if not owned
+   * @returns T or null-like if not owned
    */
   getOrNull() {
-    if (this.#moved)
+    if (!this.owned)
       return
     return this.inner
   }
 
   /**
-   * Get the value or throw if moved
+   * Get the value or throw if not owned
    * @returns T
-   * @throws BoxMovedError if moved
+   * @throws NotOwnedError if not owned
    */
   getOrThrow(): T {
-    if (this.#moved)
-      throw new BoxMovedError()
+    if (this.moved)
+      throw new MovedError()
+    if (this.borrowed)
+      throw new BorrowedError()
     return this.inner
   }
 
   /**
-   * Get the value and set this as moved or null-like if already moved
-   * @returns T or null-like if moved
+   * Get the value and set this as moved or null-like if not owned
+   * @returns T or null-like if not owned
    */
   unwrapOrNull() {
-    if (this.#moved)
+    if (!this.owned)
       return
-    this.#moved = true
+    this.#state = "moved"
 
     return this.inner
   }
 
   /**
-   * Get the value and set this as moved or throw if already moved
+   * Get the value and set this as moved or throw if not owned
    * @returns T
-   * @throws BoxMovedError if already moved
+   * @throws BoxMovedError if not owned
    */
   unwrapOrThrow(): T {
-    if (this.#moved)
-      throw new BoxMovedError()
-    this.#moved = true
+    if (this.moved)
+      throw new MovedError()
+    if (this.borrowed)
+      throw new BorrowedError()
+    this.#state = "moved"
 
     return this.inner
   }
@@ -100,9 +123,9 @@ export class Box<T> {
    * @returns Box<T> or null-like if moved
    */
   moveOrNull() {
-    if (this.#moved)
+    if (!this.owned)
       return
-    this.#moved = true
+    this.#state = "moved"
 
     return new Box(this.inner)
   }
@@ -113,11 +136,37 @@ export class Box<T> {
    * @throws BoxMovedError if already moved
    */
   moveOrThrow() {
-    if (this.#moved)
-      throw new BoxMovedError()
-    this.#moved = true
+    if (this.moved)
+      throw new MovedError()
+    if (this.borrowed)
+      throw new BorrowedError()
+    this.#state = "moved"
 
     return new Box(this.inner)
+  }
+
+  borrowOrNull(): Nullable<Borrow<T>> {
+    if (!this.owned)
+      return
+    this.#state = "borrowed"
+
+    return new Borrow(this)
+  }
+
+  borrowOrThrow(): Borrow<T> {
+    if (this.moved)
+      throw new MovedError()
+    if (this.borrowed)
+      throw new BorrowedError()
+    this.#state = "borrowed"
+
+    return new Borrow(this)
+  }
+
+  returnOrThrow(): void {
+    if (!this.borrowed)
+      throw new NotBorrowedError()
+    this.#state = "owned"
   }
 
 }
