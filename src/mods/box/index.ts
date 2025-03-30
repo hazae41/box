@@ -79,7 +79,7 @@ export class Box<T> {
    * Get the value or null-like if not owned
    * @returns T or null-like if not owned
    */
-  getOrNull() {
+  getOrNull(): Nullable<T> {
     if (!this.owned)
       return
     return this.inner
@@ -102,7 +102,7 @@ export class Box<T> {
    * Get the value and set this as moved or null-like if not owned
    * @returns T or null-like if not owned
    */
-  unwrapOrNull() {
+  unwrapOrNull(): Nullable<T> {
     if (!this.owned)
       return
     this.#state = "moved"
@@ -129,7 +129,7 @@ export class Box<T> {
    * Move the value to a new box and set this one as moved or null-like if already moved
    * @returns Box<T> or null-like if moved
    */
-  moveOrNull() {
+  moveOrNull(): Nullable<Box<T>> {
     if (!this.owned)
       return
     this.#state = "moved"
@@ -142,7 +142,7 @@ export class Box<T> {
    * @returns Box<T>
    * @throws BoxMovedError if already moved
    */
-  moveOrThrow() {
+  moveOrThrow(): Box<T> {
     if (this.moved)
       throw new MovedError()
     if (this.borrowed)
