@@ -22,7 +22,7 @@ npm i @hazae41/box
 
 ### `Box<T>`
 
-A movable reference
+An ownable reference
 
 ```typescript
 import { Box } from "@hazae41/box"
@@ -35,9 +35,16 @@ class Resource {
 
 }
 
-async function take(box: Box<Resource>) {
+async function borrow(box: Box<Resource>) {
+  using borrow = box.borrowOrThrow()
+  await doSomethingOrThrow()
+}
+
+async function move(box: Box<Resource>) {
   using box2 = box.moveOrThrow()
   await doSomethingOrThrow()
+
+  // Disposed here
 }
 
 /**
@@ -45,7 +52,16 @@ async function take(box: Box<Resource>) {
  */
 {
   using box = new Box(new Resource())
-  take(box).catch(console.error)
+
+  // Won't take ownership
+  const borrowed = borrow(box)
+  console.log(box.borrowed) // true
+  await borrowed
+
+  // Will take ownership
+  move(box).catch(console.error)
+
+  // Not disposed here
 }
 ```
 
