@@ -1,47 +1,29 @@
 /**
  * A stack of disposable objects
  */
-export class Stack {
-
-  #stack = new Array<Disposable>()
+export class Stack<T> {
 
   /**
    * A stack of disposable objects
    */
-  constructor() { }
+  constructor(
+    readonly array: T[] = []
+  ) { }
 
-  [Symbol.dispose]() {
-    for (const value of this.#stack) {
-      using _ = value
-    }
+  [Symbol.dispose](this: Stack<Disposable>) {
+    for (const value of this.array)
+      value[Symbol.dispose]?.()
+    //
   }
 
-  push(value: Disposable) {
-    this.#stack.push(value)
+  async [Symbol.asyncDispose](this: Stack<AsyncDisposable>) {
+    for (const value of this.array)
+      await value[Symbol.asyncDispose]?.()
+    //
   }
 
-}
-
-/**
- * A stack of disposable objects
- */
-export class AsyncStack {
-
-  #stack = new Array<AsyncDisposable>()
-
-  /**
-   * A stack of disposable objects
-   */
-  constructor() { }
-
-  async [Symbol.asyncDispose]() {
-    for (const value of this.#stack) {
-      await using _ = value
-    }
-  }
-
-  push(value: AsyncDisposable) {
-    this.#stack.push(value)
+  push(value: T) {
+    this.array.push(value)
   }
 
 }
