@@ -21,6 +21,10 @@ export class Tick<T extends Disposable> {
     clearTimeout(this.#timeout)
   }
 
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
+
   get() {
     return this.inner
   }
@@ -51,9 +55,12 @@ export class AsyncTick<T extends AsyncDisposable> {
     this.#timeout = setTimeout(() => this.inner[Symbol.asyncDispose]().then(undefined, console.error), delay)
   }
 
-
   [Symbol.dispose]() {
     clearTimeout(this.#timeout)
+  }
+
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
   }
 
   get() {

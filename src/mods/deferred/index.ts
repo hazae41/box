@@ -1,14 +1,26 @@
-export class Deferred<T> {
+export class Deferred {
 
   constructor(
-    readonly inner: () => T
+    readonly inner: () => void
   ) { }
 
-  [Symbol.dispose](this: Deferred<void>) {
+  [Symbol.dispose]() {
     this.inner()
   }
 
-  async [Symbol.asyncDispose](this: Deferred<PromiseLike<void>>) {
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
+
+}
+
+export class AsyncDeferred {
+
+  constructor(
+    readonly inner: () => PromiseLike<void>
+  ) { }
+
+  async [Symbol.asyncDispose]() {
     await this.inner()
   }
 

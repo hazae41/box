@@ -20,6 +20,10 @@ export class Auto<T extends Disposable> {
     Auto.registry.unregister(this)
   }
 
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
+
   get() {
     return this.inner
   }
@@ -51,6 +55,10 @@ export class AsyncAuto<T extends AsyncDisposable> {
 
   [Symbol.dispose]() {
     AsyncAuto.registry.unregister(this)
+  }
+
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
   }
 
   get() {
