@@ -90,6 +90,22 @@ export class Box<T extends Disposable> {
     return this.inner
   }
 
+  checkOrNull(): Nullable<this> {
+    if (!this.owned)
+      return
+    return this
+  }
+
+  checkOrThrow(): this {
+    if (this.moved)
+      throw new MovedError()
+    if (this.borrowed)
+      throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
+    return this
+  }
+
   /**
    * Get the value and set this as moved or null-like if not owned
    * @returns T or null-like if not owned

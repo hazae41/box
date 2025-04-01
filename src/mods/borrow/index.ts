@@ -80,7 +80,7 @@ export class Borrow<T> {
   }
 
   getOrNull(): Nullable<T> {
-    if (this.borrowed)
+    if (!this.owned)
       return
     return this.inner
   }
@@ -93,8 +93,22 @@ export class Borrow<T> {
     return this.inner
   }
 
-  borrowOrNull(): Nullable<Borrow<T>> {
+  checkOrNull(): Nullable<this> {
+    if (!this.owned)
+      return
+    return this
+  }
+
+  checkOrThrow(): this {
     if (this.borrowed)
+      throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
+    return this
+  }
+
+  borrowOrNull(): Nullable<Borrow<T>> {
+    if (!this.owned)
       return
     this.#state = "borrowed"
 
