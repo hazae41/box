@@ -1,6 +1,5 @@
-import { Future } from "@hazae41/future"
 import { Nullable } from "libs/nullable/index.js"
-import { Borrow, BorrowedError, NotBorrowedError } from "mods/borrow/index.js"
+import { Borrow, BorrowedError, DroppedError } from "mods/borrow/index.js"
 
 export class MovedError extends Error {
   readonly #class = MovedError
@@ -15,15 +14,14 @@ export type BoxState =
   | "owned"
   | "moved"
   | "borrowed"
+  | "dropped"
 
 /**
  * An ownable reference
  */
-export class Box<T> {
+export class Box<T extends Disposable> {
 
-  #state = "owned"
-
-  #resolveOnReturn = Future.resolve()
+  #state: BoxState = "owned"
 
   /**
    * An ownable reference
@@ -33,27 +31,19 @@ export class Box<T> {
     readonly inner: T
   ) { }
 
-  [Symbol.dispose](this: Box<Disposable>) {
-    if (this.moved)
-      return
+  [Symbol.dispose]() {
     if (this.borrowed)
-      throw new BorrowedError()
-    this.inner[Symbol.dispose]?.()
+      this.#state = "dropped"
+    if (this.owned)
+      this.inner[Symbol.dispose]?.()
+    return
   }
 
-  async [Symbol.asyncDispose](this: Box<AsyncDisposable>) {
-    if (this.moved)
-      return
-    if (this.borrowed)
-      throw new BorrowedError()
-    await this.inner[Symbol.asyncDispose]?.()
-  }
-
-  static create<T>(inner: T) {
+  static create<T extends Disposable>(inner: T) {
     return new Box(inner)
   }
 
-  static createAsMoved<T>(inner: T) {
+  static createAsMoved<T extends Disposable>(inner: T) {
     const box = new Box(inner)
     box.#state = "moved"
     return box
@@ -71,8 +61,8 @@ export class Box<T> {
     return this.#state === "borrowed"
   }
 
-  get resolveOnReturn() {
-    return this.#resolveOnReturn.promise
+  get dropped() {
+    return this.#state === "dropped"
   }
 
   /**
@@ -95,6 +85,8 @@ export class Box<T> {
       throw new MovedError()
     if (this.borrowed)
       throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
     return this.inner
   }
 
@@ -120,6 +112,8 @@ export class Box<T> {
       throw new MovedError()
     if (this.borrowed)
       throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
     this.#state = "moved"
 
     return this.inner
@@ -147,6 +141,8 @@ export class Box<T> {
       throw new MovedError()
     if (this.borrowed)
       throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
     this.#state = "moved"
 
     return new Box(this.inner)
@@ -157,8 +153,6 @@ export class Box<T> {
       return
     this.#state = "borrowed"
 
-    this.#resolveOnReturn = new Future()
-
     return new Borrow(this)
   }
 
@@ -167,19 +161,19 @@ export class Box<T> {
       throw new MovedError()
     if (this.borrowed)
       throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
     this.#state = "borrowed"
-
-    this.#resolveOnReturn = new Future()
 
     return new Borrow(this)
   }
 
   returnOrThrow(): void {
-    if (!this.borrowed)
-      throw new NotBorrowedError()
-    this.#state = "owned"
-
-    this.#resolveOnReturn.resolve()
+    if (this.dropped)
+      this.inner[Symbol.dispose]?.()
+    if (this.borrowed)
+      this.#state = "owned"
+    return
   }
 
 }

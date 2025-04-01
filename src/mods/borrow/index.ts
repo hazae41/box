@@ -1,4 +1,3 @@
-import { Future } from "@hazae41/future"
 import { Nullable } from "libs/nullable/index.js"
 
 export class BorrowedError extends Error {
@@ -19,10 +18,23 @@ export class NotBorrowedError extends Error {
   }
 }
 
+export class DroppedError extends Error {
+  readonly #class = DroppedError
+  readonly name = this.#class.name
+
+  constructor() {
+    super(`Resource has been dropped`)
+  }
+}
+
 export interface Borrowable<T> {
   readonly inner: T
 
+  readonly owned: boolean
+
   readonly borrowed: boolean
+
+  readonly dropped: boolean
 
   borrowOrNull(): Nullable<Borrow<T>>
   borrowOrThrow(): Borrow<T>
@@ -30,74 +42,81 @@ export interface Borrowable<T> {
   returnOrThrow(): void
 }
 
+export type BorrowState =
+  | "owned"
+  | "borrowed"
+  | "dropped"
+
 export class Borrow<T> {
 
-  #borrowed = false
-
-  #resolveOnReturn = Future.resolve()
+  #state: BorrowState = "owned"
 
   constructor(
     readonly parent: Borrowable<T>
   ) { }
 
   [Symbol.dispose](this: Borrow<Disposable>) {
-    if (this.#borrowed)
-      throw new BorrowedError()
-    this.#borrowed = false
-
-    this.parent.returnOrThrow()
+    if (this.borrowed)
+      this.#state = "dropped"
+    if (this.owned)
+      this.parent.returnOrThrow()
+    return
   }
 
   get inner() {
     return this.parent.inner
   }
 
-  get borrowed() {
-    return this.#borrowed
+  get owned() {
+    return this.#state === "owned"
   }
 
-  get resolveOnReturn() {
-    return this.#resolveOnReturn.promise
+  get borrowed() {
+    return this.#state === "borrowed"
+  }
+
+  get dropped() {
+    return this.#state === "dropped"
   }
 
   getOrNull(): Nullable<T> {
-    if (this.#borrowed)
+    if (this.borrowed)
       return
     return this.inner
   }
 
   getOrThrow(): T {
-    if (this.#borrowed)
+    if (this.borrowed)
       throw new BorrowedError()
+    if (this.dropped)
+      throw new DroppedError()
     return this.inner
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
-    if (this.#borrowed)
+    if (this.borrowed)
       return
-    this.#borrowed = true
-
-    this.#resolveOnReturn = new Future()
+    this.#state = "borrowed"
 
     return new Borrow(this)
   }
 
   borrowOrThrow(): Borrow<T> {
-    if (this.#borrowed)
+    if (this.borrowed)
       throw new BorrowedError()
-    this.#borrowed = true
-
-    this.#resolveOnReturn = new Future()
+    if (this.dropped)
+      throw new DroppedError()
+    this.#state = "borrowed"
 
     return new Borrow(this)
   }
 
   returnOrThrow(): void {
-    if (!this.#borrowed)
-      throw new NotBorrowedError()
-    this.#borrowed = false
-
-    this.#resolveOnReturn.resolve()
+    if (this.dropped)
+      this.parent.returnOrThrow()
+    if (this.borrowed)
+      this.#state = "owned"
+    return
   }
 
 }

@@ -1,6 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { assert, test } from "@hazae41/phobos";
+import { Borrowable } from "mods/borrow/index.js";
 import { Box } from "./index.js";
 
 class Resource implements Disposable {
@@ -90,15 +91,34 @@ await test("borrow", async ({ test, message }) => {
 
   const resource = new Resource()
 
-  async function borrow(box: Box<Resource>) {
-    using borrow = box.borrowOrThrow()
+  async function borrow(parent: Borrowable<Resource>) {
+    using borrow = parent.borrowOrThrow()
     const inner = borrow.getOrThrow()
 
     assert(inner === resource)
 
+    borrow2(borrow)
+
+    assert(borrow.borrowed === true)
+
     await new Promise(ok => setTimeout(ok, 1000))
 
-    assert(box.borrowed === true)
+    assert(parent.dropped === true)
+
+    console.log("returning first borrow")
+  }
+
+  async function borrow2(parent: Borrowable<Resource>) {
+    using borrow = parent.borrowOrThrow()
+    const inner = borrow.getOrThrow()
+
+    assert(inner === resource)
+
+    await new Promise(ok => setTimeout(ok, 2000))
+
+    assert(parent.dropped === true)
+
+    console.log("returning second borrow")
   }
 
   {
@@ -106,10 +126,10 @@ await test("borrow", async ({ test, message }) => {
 
     borrow(box)
 
-    await box.resolveOnReturn
-
-    assert(box.borrowed === false)
+    assert(box.borrowed === true)
   }
+
+  await new Promise(ok => setTimeout(ok, 5000))
 
   assert(resource.disposed)
 })
