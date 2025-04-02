@@ -27,7 +27,7 @@ export class DroppedError extends Error {
   }
 }
 
-export interface Borrowable<T> {
+export interface Borrowable<T extends Disposable> {
   readonly inner: T
 
   readonly owned: boolean
@@ -47,7 +47,7 @@ export type BorrowState =
   | "borrowed"
   | "dropped"
 
-export class Borrow<T> {
+export class Borrow<T extends Disposable> {
 
   #state: BorrowState = "owned"
 
@@ -55,12 +55,16 @@ export class Borrow<T> {
     readonly parent: Borrowable<T>
   ) { }
 
-  [Symbol.dispose](this: Borrow<Disposable>) {
+  [Symbol.dispose]() {
     if (this.borrowed)
       this.#state = "dropped"
     if (this.owned)
       this.parent.returnOrThrow()
     return
+  }
+
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
   }
 
   get inner() {

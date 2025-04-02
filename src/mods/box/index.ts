@@ -39,6 +39,10 @@ export class Box<T extends Disposable> {
     return
   }
 
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
+
   static create<T extends Disposable>(inner: T) {
     return new Box(inner)
   }

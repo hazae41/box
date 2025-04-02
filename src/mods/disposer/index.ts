@@ -19,6 +19,10 @@ export class Disposer<T> implements Disposable {
     this.clean[Symbol.dispose]()
   }
 
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
+
   get() {
     return this.value
   }
