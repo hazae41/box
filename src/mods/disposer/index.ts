@@ -15,6 +15,10 @@ export class Disposer<T> implements Disposable {
     return new Disposer(disposable, new Deferred(() => disposable[Symbol.dispose]()))
   }
 
+  static void<T>(inner: T) {
+    return new Disposer(inner, Deferred.void())
+  }
+
   [Symbol.dispose]() {
     this.clean[Symbol.dispose]()
   }
@@ -47,6 +51,10 @@ export class AsyncDisposer<T> implements AsyncDisposable {
 
   static from<T>(disposable: T & AsyncDisposable) {
     return new AsyncDisposer(disposable, new AsyncDeferred(() => disposable[Symbol.asyncDispose]()))
+  }
+
+  static void<T>(inner: T) {
+    return new AsyncDisposer(inner, AsyncDeferred.void())
   }
 
   async [Symbol.asyncDispose]() {
