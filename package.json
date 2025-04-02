@@ -49,8 +49,5 @@
     "esmodules",
     "tested",
     "unit-tested"
-  ],
-  "dependencies": {
-    "@hazae41/future": "^2.0.1"
-  }
+  ]
 }
