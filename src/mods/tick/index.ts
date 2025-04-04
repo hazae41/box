@@ -7,14 +7,14 @@ export class Tick<T extends Disposable> {
 
   /**
    * A reference that will be disposed after some delay
-   * @param inner 
+   * @param value 
    * @param delay 
    */
   constructor(
-    readonly inner: T,
-    readonly delay = 0
+    readonly value: T,
+    readonly delay: number = 0
   ) {
-    this.#timeout = setTimeout(() => this.inner[Symbol.dispose](), delay)
+    this.#timeout = setTimeout(() => this.value[Symbol.dispose](), delay)
   }
 
   [Symbol.dispose]() {
@@ -26,12 +26,12 @@ export class Tick<T extends Disposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   unwrap() {
     using _ = this
-    return this.inner
+    return this.value
   }
 
 }
@@ -45,14 +45,14 @@ export class AsyncTick<T extends AsyncDisposable> {
 
   /**
    * A reference that will be disposed after some delay
-   * @param inner 
+   * @param value 
    * @param delay 
    */
   constructor(
-    readonly inner: T,
-    readonly delay = 0
+    readonly value: T,
+    readonly delay: number = 0
   ) {
-    this.#timeout = setTimeout(() => this.inner[Symbol.asyncDispose]().then(undefined, console.error), delay)
+    this.#timeout = setTimeout(() => this.value[Symbol.asyncDispose]().then(undefined, console.error), delay)
   }
 
   [Symbol.dispose]() {
@@ -64,12 +64,12 @@ export class AsyncTick<T extends AsyncDisposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   unwrap() {
     using _ = this
-    return this.inner
+    return this.value
   }
 
 }

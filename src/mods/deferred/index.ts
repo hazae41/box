@@ -1,7 +1,7 @@
 export class Deferred {
 
   constructor(
-    readonly inner: () => void
+    readonly value: () => void
   ) { }
 
   static void() {
@@ -9,7 +9,7 @@ export class Deferred {
   }
 
   [Symbol.dispose]() {
-    this.inner()
+    this.value()
   }
 
   async [Symbol.asyncDispose]() {
@@ -21,7 +21,7 @@ export class Deferred {
 export class AsyncDeferred {
 
   constructor(
-    readonly inner: () => PromiseLike<void>
+    readonly value: () => PromiseLike<void>
   ) { }
 
   static void() {
@@ -29,7 +29,7 @@ export class AsyncDeferred {
   }
 
   async [Symbol.asyncDispose]() {
-    await this.inner()
+    await this.value()
   }
 
 }

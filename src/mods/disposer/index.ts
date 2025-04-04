@@ -7,12 +7,12 @@ export class Disposer<T> implements Disposable {
     readonly clean: Deferred
   ) { }
 
-  static wrap<T>(inner: T, clean: (inner: T) => void = () => { }) {
-    return new Disposer(inner, new Deferred(() => clean(inner)))
+  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+    return new Disposer(value, new Deferred(() => clean(value)))
   }
 
-  static from<T>(disposable: T & Disposable) {
-    return new Disposer(disposable, new Deferred(() => disposable[Symbol.dispose]()))
+  static from<T>(value: T & Disposable) {
+    return new Disposer(value, new Deferred(() => value[Symbol.dispose]()))
   }
 
   [Symbol.dispose]() {
@@ -41,12 +41,12 @@ export class AsyncDisposer<T> implements AsyncDisposable {
     readonly clean: AsyncDeferred
   ) { }
 
-  static wrap<T>(inner: T, clean: (inner: T) => PromiseLike<void> = async () => { }) {
-    return new AsyncDisposer(inner, new AsyncDeferred(() => clean(inner)))
+  static wrap<T>(value: T, clean: (value: T) => PromiseLike<void> = async () => { }) {
+    return new AsyncDisposer(value, new AsyncDeferred(() => clean(value)))
   }
 
-  static from<T>(disposable: T & AsyncDisposable) {
-    return new AsyncDisposer(disposable, new AsyncDeferred(() => disposable[Symbol.asyncDispose]()))
+  static from<T>(value: T & AsyncDisposable) {
+    return new AsyncDisposer(value, new AsyncDeferred(() => value[Symbol.asyncDispose]()))
   }
 
   async [Symbol.asyncDispose]() {

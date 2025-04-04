@@ -28,7 +28,7 @@ export class DroppedError extends Error {
 }
 
 export interface Borrowable<T extends Disposable> {
-  readonly inner: T
+  readonly value: T
 
   readonly owned: boolean
 
@@ -68,8 +68,8 @@ export class Borrow<T extends Disposable> {
     this[Symbol.dispose]()
   }
 
-  get inner() {
-    return this.parent.inner
+  get value() {
+    return this.parent.value
   }
 
   get owned() {
@@ -85,13 +85,13 @@ export class Borrow<T extends Disposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   getOrNull(): Nullable<T> {
     if (!this.owned)
       return
-    return this.inner
+    return this.value
   }
 
   getOrThrow(): T {
@@ -99,7 +99,7 @@ export class Borrow<T extends Disposable> {
       throw new BorrowedError()
     if (this.dropped)
       throw new DroppedError()
-    return this.inner
+    return this.value
   }
 
   checkOrNull(): Nullable<this> {

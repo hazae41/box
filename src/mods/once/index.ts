@@ -7,10 +7,10 @@ export class Once<T extends Disposable> {
 
   /**
    * A reference that can only be disposed once
-   * @param inner 
+   * @param value 
    */
   constructor(
-    readonly inner: T
+    readonly value: T
   ) { }
 
   [Symbol.dispose](this: Once<Disposable>) {
@@ -18,7 +18,7 @@ export class Once<T extends Disposable> {
       return
     this.#disposed = true
 
-    this.inner[Symbol.dispose]?.()
+    this.value[Symbol.dispose]?.()
   }
 
   async [Symbol.asyncDispose]() {
@@ -30,7 +30,7 @@ export class Once<T extends Disposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
 }
@@ -41,10 +41,10 @@ export class AsyncOnce<T extends AsyncDisposable> {
 
   /**
    * A reference that can only be disposed once
-   * @param inner 
+   * @param value 
    */
   constructor(
-    readonly inner: T
+    readonly value: T
   ) { }
 
   async [Symbol.asyncDispose]() {
@@ -52,7 +52,7 @@ export class AsyncOnce<T extends AsyncDisposable> {
       return
     this.#disposed = true
 
-    await this.inner[Symbol.asyncDispose]?.()
+    await this.value[Symbol.asyncDispose]?.()
   }
 
   get disposed() {
@@ -60,7 +60,7 @@ export class AsyncOnce<T extends AsyncDisposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
 }

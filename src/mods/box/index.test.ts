@@ -17,15 +17,15 @@ class Resource implements Disposable {
 class A<T extends Disposable> {
 
   constructor(
-    readonly inner: Box<T>
+    readonly value: Box<T>
   ) { }
 
   [Symbol.dispose]() {
-    this.inner[Symbol.dispose]()
+    this.value[Symbol.dispose]()
   }
 
   toB() {
-    return new B(this.inner.moveOrThrow())
+    return new B(this.value.moveOrThrow())
   }
 
 }
@@ -33,15 +33,15 @@ class A<T extends Disposable> {
 class B<T extends Disposable> {
 
   constructor(
-    readonly inner: Box<T>
+    readonly value: Box<T>
   ) { }
 
   [Symbol.dispose]() {
-    this.inner[Symbol.dispose]()
+    this.value[Symbol.dispose]()
   }
 
   toA() {
-    return new A(this.inner.moveOrThrow())
+    return new A(this.value.moveOrThrow())
   }
 
 }
@@ -93,9 +93,9 @@ await test("borrow", async ({ test, message }) => {
 
   async function borrow(parent: Borrowable<Resource>) {
     using borrow = parent.borrowOrThrow()
-    const inner = borrow.getOrThrow()
+    const value = borrow.getOrThrow()
 
-    assert(inner === resource)
+    assert(value === resource)
 
     borrow2(borrow)
 
@@ -110,9 +110,9 @@ await test("borrow", async ({ test, message }) => {
 
   async function borrow2(parent: Borrowable<Resource>) {
     using borrow = parent.borrowOrThrow()
-    const inner = borrow.getOrThrow()
+    const value = borrow.getOrThrow()
 
-    assert(inner === resource)
+    assert(value === resource)
 
     await new Promise(ok => setTimeout(ok, 2000))
 

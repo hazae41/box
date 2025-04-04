@@ -8,12 +8,12 @@ export class Auto<T extends Disposable> {
 
   /**
    * A reference that will be disposed when garbage collected
-   * @param inner 
+   * @param value 
    */
   constructor(
-    readonly inner: T
+    readonly value: T
   ) {
-    Auto.registry.register(this, inner, this)
+    Auto.registry.register(this, value, this)
   }
 
   [Symbol.dispose]() {
@@ -25,12 +25,12 @@ export class Auto<T extends Disposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   unwrap() {
     using _ = this
-    return this.inner
+    return this.value
   }
 
 }
@@ -45,12 +45,12 @@ export class AsyncAuto<T extends AsyncDisposable> {
 
   /**
    * A reference that will be disposed when garbage collected
-   * @param inner 
+   * @param value 
    */
   constructor(
-    readonly inner: T
+    readonly value: T
   ) {
-    AsyncAuto.registry.register(this, inner, this)
+    AsyncAuto.registry.register(this, value, this)
   }
 
   [Symbol.dispose]() {
@@ -62,12 +62,12 @@ export class AsyncAuto<T extends AsyncDisposable> {
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   unwrap() {
     using _ = this
-    return this.inner
+    return this.value
   }
 
 }

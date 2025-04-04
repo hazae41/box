@@ -5,35 +5,35 @@ export class Slot<T extends Disposable> {
 
   /**
    * A mutable reference
-   * @param inner 
+   * @param value 
    */
   constructor(
-    public inner: T
+    public value: T
   ) { }
 
   [Symbol.dispose]() {
-    this.inner[Symbol.dispose]()
+    this.value[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
     this[Symbol.dispose]()
   }
 
-  static create<T extends Disposable>(inner: T) {
-    return new Slot(inner)
+  static create<T extends Disposable>(value: T) {
+    return new Slot(value)
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   set(value: T) {
-    this.inner = value
+    this.value = value
   }
 
   getAndSet(value: T) {
-    const old = this.inner
-    this.inner = value
+    const old = this.value
+    this.value = value
     return old
   }
 
@@ -43,31 +43,31 @@ export class AsyncSlot<T extends AsyncDisposable> {
 
   /**
    * A mutable reference
-   * @param inner 
+   * @param value 
    */
   constructor(
-    public inner: T
+    public value: T
   ) { }
 
   async [Symbol.asyncDispose]() {
-    await this.inner[Symbol.asyncDispose]?.()
+    await this.value[Symbol.asyncDispose]?.()
   }
 
-  static create<T extends AsyncDisposable>(inner: T) {
-    return new AsyncSlot(inner)
+  static create<T extends AsyncDisposable>(value: T) {
+    return new AsyncSlot(value)
   }
 
   get() {
-    return this.inner
+    return this.value
   }
 
   set(value: T) {
-    this.inner = value
+    this.value = value
   }
 
   getAndSet(value: T) {
-    const old = this.inner
-    this.inner = value
+    const old = this.value
+    this.value = value
     return old
   }
 

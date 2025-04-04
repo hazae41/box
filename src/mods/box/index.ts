@@ -25,10 +25,10 @@ export class Box<T extends Disposable> {
 
   /**
    * An ownable reference
-   * @param inner 
+   * @param value 
    */
   constructor(
-    readonly inner: T
+    readonly value: T
   ) { }
 
   [Symbol.dispose]() {
@@ -37,19 +37,19 @@ export class Box<T extends Disposable> {
 
     if (!this.owned)
       return
-    this.inner[Symbol.dispose]?.()
+    this.value[Symbol.dispose]?.()
   }
 
   async [Symbol.asyncDispose]() {
     this[Symbol.dispose]()
   }
 
-  static create<T extends Disposable>(inner: T) {
-    return new Box(inner)
+  static create<T extends Disposable>(value: T) {
+    return new Box(value)
   }
 
-  static createAsMoved<T extends Disposable>(inner: T) {
-    const box = new Box(inner)
+  static createAsMoved<T extends Disposable>(value: T) {
+    const box = new Box(value)
     box.#state = "moved"
     return box
   }
@@ -75,7 +75,7 @@ export class Box<T extends Disposable> {
    * @returns T
    */
   get() {
-    return this.inner
+    return this.value
   }
 
   /**
@@ -85,7 +85,7 @@ export class Box<T extends Disposable> {
   getOrNull(): Nullable<T> {
     if (!this.owned)
       return
-    return this.inner
+    return this.value
   }
 
   /**
@@ -100,7 +100,7 @@ export class Box<T extends Disposable> {
       throw new BorrowedError()
     if (this.dropped)
       throw new DroppedError()
-    return this.inner
+    return this.value
   }
 
   checkOrNull(): Nullable<this> {
@@ -128,7 +128,7 @@ export class Box<T extends Disposable> {
       return
     this.#state = "moved"
 
-    return this.inner
+    return this.value
   }
 
   /**
@@ -145,7 +145,7 @@ export class Box<T extends Disposable> {
       throw new DroppedError()
     this.#state = "moved"
 
-    return this.inner
+    return this.value
   }
 
   /**
@@ -157,7 +157,7 @@ export class Box<T extends Disposable> {
       return
     this.#state = "moved"
 
-    return new Box(this.inner)
+    return new Box(this.value)
   }
 
   /**
@@ -174,7 +174,7 @@ export class Box<T extends Disposable> {
       throw new DroppedError()
     this.#state = "moved"
 
-    return new Box(this.inner)
+    return new Box(this.value)
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
@@ -199,7 +199,7 @@ export class Box<T extends Disposable> {
 
   returnOrThrow(): void {
     if (this.dropped)
-      this.inner[Symbol.dispose]?.()
+      this.value[Symbol.dispose]?.()
     if (this.borrowed)
       this.#state = "owned"
     return
