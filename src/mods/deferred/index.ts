@@ -16,6 +16,10 @@ export class Deferred {
     this[Symbol.dispose]()
   }
 
+  get() {
+    return this.value
+  }
+
 }
 
 export class AsyncDeferred {
@@ -30,6 +34,10 @@ export class AsyncDeferred {
 
   async [Symbol.asyncDispose]() {
     await this.value()
+  }
+
+  get() {
+    return this.value
   }
 
 }
