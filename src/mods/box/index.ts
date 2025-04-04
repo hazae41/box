@@ -71,6 +71,14 @@ export class Box<T extends Disposable> {
   }
 
   /**
+   * Get the value
+   * @returns T
+   */
+  get() {
+    return this.inner
+  }
+
+  /**
    * Get the value or null-like if not owned
    * @returns T or null-like if not owned
    */
