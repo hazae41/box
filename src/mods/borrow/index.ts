@@ -84,6 +84,10 @@ export class Borrow<T extends Disposable> {
     return this.#state === "dropped"
   }
 
+  get() {
+    return this.inner
+  }
+
   getOrNull(): Nullable<T> {
     if (!this.owned)
       return
