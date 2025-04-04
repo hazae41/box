@@ -31,14 +31,13 @@ export class Box<T extends Disposable> {
   ) { }
 
   [Symbol.dispose]() {
-    const owned = this.owned
-
-    this.#state = "dropped"
-
-    if (!owned)
+    if (this.dropped)
       return
 
-    this.value[Symbol.dispose]()
+    if (this.owned)
+      this.value[Symbol.dispose]()
+
+    this.#state = "dropped"
   }
 
   async [Symbol.asyncDispose]() {

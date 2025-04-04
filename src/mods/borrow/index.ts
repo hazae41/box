@@ -56,14 +56,13 @@ export class Borrow<T extends Disposable> {
   ) { }
 
   [Symbol.dispose]() {
-    const owned = this.owned
-
-    this.#state = "dropped"
-
-    if (!owned)
+    if (this.dropped)
       return
 
-    this.parent.returnOrThrow()
+    if (this.owned)
+      this.parent.returnOrThrow()
+
+    this.#state = "dropped"
   }
 
   async [Symbol.asyncDispose]() {
