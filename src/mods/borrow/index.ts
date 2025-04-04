@@ -1,20 +1,20 @@
 import { Nullable } from "libs/nullable/index.js"
 
+export class OwnedError extends Error {
+  readonly #class = OwnedError
+  readonly name = this.#class.name
+
+  constructor() {
+    super(`Resource is owned`)
+  }
+}
+
 export class BorrowedError extends Error {
   readonly #class = BorrowedError
   readonly name = this.#class.name
 
   constructor() {
-    super(`Resource has been borrowed`)
-  }
-}
-
-export class NotBorrowedError extends Error {
-  readonly #class = NotBorrowedError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Resource has not been borrowed`)
+    super(`Resource is borrowed`)
   }
 }
 
@@ -23,7 +23,7 @@ export class DroppedError extends Error {
   readonly name = this.#class.name
 
   constructor() {
-    super(`Resource has been dropped`)
+    super(`Resource is dropped`)
   }
 }
 
@@ -56,12 +56,9 @@ export class Borrow<T extends Disposable> {
   ) { }
 
   [Symbol.dispose]() {
-    if (this.borrowed)
-      this.#state = "dropped"
-
-    if (!this.owned)
-      return
-    this.parent.returnOrThrow()
+    if (this.owned)
+      this.parent.returnOrThrow()
+    this.#state = "dropped"
   }
 
   async [Symbol.asyncDispose]() {
@@ -135,10 +132,14 @@ export class Borrow<T extends Disposable> {
   }
 
   returnOrThrow(): void {
-    if (this.dropped)
-      this.parent.returnOrThrow()
+    if (this.owned)
+      throw new OwnedError()
+
     if (this.borrowed)
       this.#state = "owned"
+    else if (this.dropped)
+      this.parent.returnOrThrow()
+
     return
   }
 

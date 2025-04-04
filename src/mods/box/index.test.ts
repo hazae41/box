@@ -68,7 +68,7 @@ await test("dummy", async ({ test, message }) => {
   const resource = new Resource()
 
   function take(box: Box<Resource>) {
-    assert(box.moved === true)
+    assert(box.dropped === true)
   }
 
   /**
@@ -77,8 +77,8 @@ await test("dummy", async ({ test, message }) => {
   {
     using box = new Box(resource)
 
-    take(Box.createAsMoved(box.getOrThrow()))
-    take(Box.createAsMoved(box.getOrThrow()))
+    take(Box.createAsDropped(box.getOrThrow()))
+    take(Box.createAsDropped(box.getOrThrow()))
 
     assert(!resource.disposed)
   }
