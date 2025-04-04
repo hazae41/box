@@ -31,9 +31,14 @@ export class Box<T extends Disposable> {
   ) { }
 
   [Symbol.dispose]() {
-    if (this.owned)
-      this.value[Symbol.dispose]?.()
+    const owned = this.owned
+
     this.#state = "dropped"
+
+    if (!owned)
+      return
+
+    this.value[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
@@ -186,7 +191,7 @@ export class Box<T extends Disposable> {
     if (this.borrowed)
       this.#state = "owned"
     else if (this.dropped)
-      this.value[Symbol.dispose]?.()
+      this.value[Symbol.dispose]()
 
     return
   }

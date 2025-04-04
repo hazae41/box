@@ -18,7 +18,7 @@ export class Once<T extends Disposable> {
       return
     this.#disposed = true
 
-    this.value[Symbol.dispose]?.()
+    this.value[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
@@ -52,7 +52,7 @@ export class AsyncOnce<T extends AsyncDisposable> {
       return
     this.#disposed = true
 
-    await this.value[Symbol.asyncDispose]?.()
+    await this.value[Symbol.asyncDispose]()
   }
 
   get disposed() {

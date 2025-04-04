@@ -50,7 +50,7 @@ export class AsyncSlot<T extends AsyncDisposable> {
   ) { }
 
   async [Symbol.asyncDispose]() {
-    await this.value[Symbol.asyncDispose]?.()
+    await this.value[Symbol.asyncDispose]()
   }
 
   static create<T extends AsyncDisposable>(value: T) {
