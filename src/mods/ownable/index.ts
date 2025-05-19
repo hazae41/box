@@ -32,4 +32,8 @@ export class Owned<T extends Disposable> {
     this[Symbol.dispose]()
   }
 
+  get() {
+    return this.value
+  }
+
 }
