@@ -1,6 +1,6 @@
 import { AsyncDeferred, Deferred } from "mods/deferred/index.js"
 
-export class Disposer<T> implements Disposable {
+export class Pin<T> implements Disposable {
 
   constructor(
     readonly value: T,
@@ -8,11 +8,11 @@ export class Disposer<T> implements Disposable {
   ) { }
 
   static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
-    return new Disposer(value, new Deferred(() => clean(value)))
+    return new Pin(value, new Deferred(() => clean(value)))
   }
 
   static from<T>(value: T & Disposable) {
-    return new Disposer(value, new Deferred(() => value[Symbol.dispose]()))
+    return new Pin(value, new Deferred(() => value[Symbol.dispose]()))
   }
 
   [Symbol.dispose]() {
@@ -27,14 +27,14 @@ export class Disposer<T> implements Disposable {
     return this.value
   }
 
-  async await<T>(this: Disposer<Promise<T>>) {
+  async await<T>(this: Pin<Promise<T>>) {
     using _ = this.clean
     return await this.get()
   }
 
 }
 
-export class AsyncDisposer<T> implements AsyncDisposable {
+export class AsyncPin<T> implements AsyncDisposable {
 
   constructor(
     readonly value: T,
@@ -42,11 +42,11 @@ export class AsyncDisposer<T> implements AsyncDisposable {
   ) { }
 
   static wrap<T>(value: T, clean: (value: T) => PromiseLike<void> = async () => { }) {
-    return new AsyncDisposer(value, new AsyncDeferred(() => clean(value)))
+    return new AsyncPin(value, new AsyncDeferred(() => clean(value)))
   }
 
   static from<T>(value: T & AsyncDisposable) {
-    return new AsyncDisposer(value, new AsyncDeferred(() => value[Symbol.asyncDispose]()))
+    return new AsyncPin(value, new AsyncDeferred(() => value[Symbol.asyncDispose]()))
   }
 
   async [Symbol.asyncDispose]() {
@@ -57,7 +57,7 @@ export class AsyncDisposer<T> implements AsyncDisposable {
     return this.value
   }
 
-  async await<T>(this: AsyncDisposer<Promise<T>>) {
+  async await<T>(this: AsyncPin<Promise<T>>) {
     await using _ = this.clean
     return await this.get()
   }

@@ -1,5 +1,5 @@
 import { test } from "@hazae41/phobos"
-import { Slot } from "./index.js"
+import { Cell } from "./index.js"
 
 function alloc(value: number) {
   console.log(`alloc(${value})`)
@@ -39,7 +39,7 @@ await test("slot", async ({ test, message }) => {
   try {
     console.log(`--- ${message} ---`)
 
-    using result = new Slot(new Pointer(1))
+    using result = new Cell(new Pointer(1))
 
     for (const pointer of getPointersOrThrow()) {
       using a = pointer

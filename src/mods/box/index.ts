@@ -1,5 +1,6 @@
 import { Nullable } from "libs/nullable/index.js"
 import { Borrow, BorrowedError, DroppedError, OwnedError } from "mods/borrow/index.js"
+import { Deferred } from "mods/deferred/index.js"
 
 export class MovedError extends Error {
   readonly #class = MovedError
@@ -16,9 +17,9 @@ export type BoxState =
   | "dropped"
 
 /**
- * An ownable and borrowable reference
+ * A movable and borrowable reference
  */
-export class Box<T extends Disposable> {
+export class Box<T> implements Disposable {
 
   #state: BoxState = "owned"
 
@@ -27,31 +28,30 @@ export class Box<T extends Disposable> {
    * @param value 
    */
   constructor(
-    readonly value: T
+    readonly value: T,
+    readonly clean: Deferred
   ) { }
+
+  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+    return new Box(value, new Deferred(() => clean(value)))
+  }
+
+  static from<T>(value: T & Disposable) {
+    return new Box(value, new Deferred(() => value[Symbol.dispose]()))
+  }
 
   [Symbol.dispose]() {
     if (this.dropped)
       return
 
     if (this.owned)
-      this.value[Symbol.dispose]()
+      this.clean[Symbol.dispose]()
 
     this.#state = "dropped"
   }
 
   async [Symbol.asyncDispose]() {
     this[Symbol.dispose]()
-  }
-
-  static create<T extends Disposable>(value: T) {
-    return new Box(value)
-  }
-
-  static createAsDropped<T extends Disposable>(value: T) {
-    const box = new Box(value)
-    box.#state = "dropped"
-    return box
   }
 
   get owned() {
@@ -147,7 +147,7 @@ export class Box<T extends Disposable> {
       return
     this.#state = "dropped"
 
-    return new Box(this.value)
+    return new Box(this.value, this.clean)
   }
 
   /**
@@ -162,7 +162,7 @@ export class Box<T extends Disposable> {
       throw new DroppedError()
     this.#state = "dropped"
 
-    return new Box(this.value)
+    return new Box(this.value, this.clean)
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
@@ -170,7 +170,7 @@ export class Box<T extends Disposable> {
       return
     this.#state = "borrowed"
 
-    return new Borrow(this)
+    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
   }
 
   borrowOrThrow(): Borrow<T> {
@@ -180,19 +180,24 @@ export class Box<T extends Disposable> {
       throw new DroppedError()
     this.#state = "borrowed"
 
-    return new Borrow(this)
+    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
   }
 
-  returnOrThrow(): void {
+  #returnOrThrow(): void {
     if (this.owned)
       throw new OwnedError()
 
     if (this.borrowed)
       this.#state = "owned"
     else if (this.dropped)
-      this.value[Symbol.dispose]()
+      this.clean[Symbol.dispose]()
 
     return
+  }
+
+  async await<T>(this: Box<Promise<T>>) {
+    using _ = this.clean
+    return await this.get()
   }
 
 }

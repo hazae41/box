@@ -1,4 +1,5 @@
 import { Nullable } from "libs/nullable/index.js"
+import { Deferred } from "mods/deferred/index.js"
 
 export class OwnedError extends Error {
   readonly #class = OwnedError
@@ -27,50 +28,44 @@ export class DroppedError extends Error {
   }
 }
 
-export interface Borrowable<T extends Disposable> {
-  readonly value: T
-
-  readonly owned: boolean
-
-  readonly borrowed: boolean
-
-  readonly dropped: boolean
-
-  borrowOrNull(): Nullable<Borrow<T>>
-  borrowOrThrow(): Borrow<T>
-
-  returnOrThrow(): void
-}
-
 export type BorrowState =
   | "owned"
   | "borrowed"
   | "dropped"
 
-export class Borrow<T extends Disposable> {
+/**
+ * A borrowable reference
+ * @param value 
+ */
+export class Borrow<T> {
 
   #state: BorrowState = "owned"
 
   constructor(
-    readonly parent: Borrowable<T>
+    readonly value: T,
+    readonly clean: Deferred
   ) { }
+
+  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+    return new Borrow(value, new Deferred(() => clean(value)))
+  }
+
+  static from<T>(value: T & Disposable) {
+    return new Borrow(value, new Deferred(() => value[Symbol.dispose]()))
+  }
 
   [Symbol.dispose]() {
     if (this.dropped)
       return
 
     if (this.owned)
-      this.parent.returnOrThrow()
+      this.clean[Symbol.dispose]()
 
     this.#state = "dropped"
   }
 
   async [Symbol.asyncDispose]() {
     this[Symbol.dispose]()
-  }
-
-  get value() {
-    return this.parent.value
   }
 
   get owned() {
@@ -122,7 +117,7 @@ export class Borrow<T extends Disposable> {
       return
     this.#state = "borrowed"
 
-    return new Borrow(this)
+    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
   }
 
   borrowOrThrow(): Borrow<T> {
@@ -132,19 +127,24 @@ export class Borrow<T extends Disposable> {
       throw new DroppedError()
     this.#state = "borrowed"
 
-    return new Borrow(this)
+    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
   }
 
-  returnOrThrow(): void {
+  #returnOrThrow(): void {
     if (this.owned)
       throw new OwnedError()
 
     if (this.borrowed)
       this.#state = "owned"
     else if (this.dropped)
-      this.parent.returnOrThrow()
+      this.clean[Symbol.dispose]()
 
     return
+  }
+
+  async await<T>(this: Borrow<Promise<T>>) {
+    using _ = this.clean
+    return await this.get()
   }
 
 }

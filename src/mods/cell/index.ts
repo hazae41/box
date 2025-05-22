@@ -1,7 +1,7 @@
 /**
- * A mutable reference
+ * An interior mutable reference
  */
-export class Slot<T extends Disposable> {
+export class Cell<T extends Disposable> {
 
   /**
    * A mutable reference
@@ -20,7 +20,7 @@ export class Slot<T extends Disposable> {
   }
 
   static create<T extends Disposable>(value: T) {
-    return new Slot(value)
+    return new Cell(value)
   }
 
   get() {
@@ -39,7 +39,7 @@ export class Slot<T extends Disposable> {
 
 }
 
-export class AsyncSlot<T extends AsyncDisposable> {
+export class AsyncCell<T extends AsyncDisposable> {
 
   /**
    * A mutable reference
@@ -54,7 +54,7 @@ export class AsyncSlot<T extends AsyncDisposable> {
   }
 
   static create<T extends AsyncDisposable>(value: T) {
-    return new AsyncSlot(value)
+    return new AsyncCell(value)
   }
 
   get() {
