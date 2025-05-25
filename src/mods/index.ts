@@ -8,5 +8,5 @@ export * from "./pin/index.js";
 export * from "./ref/index.js";
 export * from "./stack/index.js";
 export * from "./tick/index.js";
+export * from "./unpin/index.js";
 export * from "./wrap/index.js";
-

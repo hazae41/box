@@ -1,15 +1,6 @@
 import { Nullable } from "libs/nullable/index.js"
 import { Deferred } from "mods/deferred/index.js"
 
-export class OwnedError extends Error {
-  readonly #class = OwnedError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Resource is owned`)
-  }
-}
-
 export class BorrowedError extends Error {
   readonly #class = BorrowedError
   readonly name = this.#class.name
@@ -19,27 +10,13 @@ export class BorrowedError extends Error {
   }
 }
 
-export class DroppedError extends Error {
-  readonly #class = DroppedError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Resource is dropped`)
-  }
-}
-
-export type BorrowState =
-  | "owned"
-  | "borrowed"
-  | "dropped"
-
 /**
  * A borrowable reference
  * @param value 
  */
 export class Borrow<T> {
 
-  #state: BorrowState = "owned"
+  #borrowed = false
 
   constructor(
     readonly value: T,
@@ -55,29 +32,18 @@ export class Borrow<T> {
   }
 
   [Symbol.dispose]() {
-    if (this.dropped)
-      return
+    if (this.#borrowed)
+      throw new BorrowedError()
 
-    if (this.owned)
-      this.clean[Symbol.dispose]()
-
-    this.#state = "dropped"
+    this.clean[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
     this[Symbol.dispose]()
   }
 
-  get owned() {
-    return this.#state === "owned"
-  }
-
   get borrowed() {
-    return this.#state === "borrowed"
-  }
-
-  get dropped() {
-    return this.#state === "dropped"
+    return this.#borrowed
   }
 
   get() {
@@ -85,73 +51,53 @@ export class Borrow<T> {
   }
 
   getOrNull(): Nullable<T> {
-    if (!this.owned)
+    if (this.#borrowed)
       return
+
     return this.value
   }
 
   getOrThrow(): T {
-    if (this.borrowed)
+    if (this.#borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
+
     return this.value
   }
 
   checkOrNull(): Nullable<this> {
-    if (!this.owned)
+    if (this.#borrowed)
       return
+
     return this
   }
 
   checkOrThrow(): this {
-    if (this.borrowed)
+    if (this.#borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
+
     return this
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
-    if (!this.owned)
+    if (this.#borrowed)
       return
-    this.#state = "borrowed"
 
-    const returnOrThrow = () => {
-      if (this.owned)
-        throw new OwnedError()
+    this.#borrowed = true
 
-      if (this.borrowed)
-        this.#state = "owned"
-      else if (this.dropped)
-        this.clean[Symbol.dispose]()
+    const dispose = () => { this.#borrowed = false }
 
-      return
-    }
-
-    return new Borrow(this.value, new Deferred(returnOrThrow))
+    return new Borrow(this.value, new Deferred(dispose))
   }
 
   borrowOrThrow(): Borrow<T> {
-    if (this.borrowed)
+    if (this.#borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
-    this.#state = "borrowed"
 
-    const returnOrThrow = () => {
-      if (this.owned)
-        throw new OwnedError()
+    this.#borrowed = true
 
-      if (this.borrowed)
-        this.#state = "owned"
-      else if (this.dropped)
-        this.clean[Symbol.dispose]()
+    const dispose = () => { this.#borrowed = false }
 
-      return
-    }
-
-    return new Borrow(this.value, new Deferred(returnOrThrow))
+    return new Borrow(this.value, new Deferred(dispose))
   }
 
   getAndDispose() {

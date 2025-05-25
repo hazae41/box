@@ -1,30 +1,17 @@
 import { Nullable } from "libs/nullable/index.js"
-import { Borrow, BorrowedError, DroppedError, OwnedError } from "mods/borrow/index.js"
+import { Borrow, BorrowedError } from "mods/borrow/index.js"
 import { Deferred } from "mods/deferred/index.js"
-
-export class MovedError extends Error {
-  readonly #class = MovedError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Resource has been moved`)
-  }
-}
-
-export type BoxState =
-  | "owned"
-  | "borrowed"
-  | "dropped"
+import { MovedError } from "mods/unpin/index.js"
 
 /**
  * A movable and borrowable reference
  */
 export class Box<T> implements Disposable {
 
-  #state: BoxState = "owned"
+  #state: "owned" | "borrowed" | "moved" = "owned"
 
   /**
-   * An ownable reference
+   * An movable and borrowable reference
    * @param value 
    */
   constructor(
@@ -41,13 +28,12 @@ export class Box<T> implements Disposable {
   }
 
   [Symbol.dispose]() {
-    if (this.dropped)
-      return
+    if (this.borrowed)
+      throw new BorrowedError()
+    if (this.moved)
+      throw new MovedError()
 
-    if (this.owned)
-      this.clean[Symbol.dispose]()
-
-    this.#state = "dropped"
+    this.clean[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
@@ -62,8 +48,8 @@ export class Box<T> implements Disposable {
     return this.#state === "borrowed"
   }
 
-  get dropped() {
-    return this.#state === "dropped"
+  get moved() {
+    return this.#state === "moved"
   }
 
   /**
@@ -79,8 +65,11 @@ export class Box<T> implements Disposable {
    * @returns T or null-like if not owned
    */
   getOrNull(): Nullable<T> {
-    if (!this.owned)
+    if (this.borrowed)
       return
+    if (this.moved)
+      return
+
     return this.value
   }
 
@@ -92,22 +81,27 @@ export class Box<T> implements Disposable {
   getOrThrow(): T {
     if (this.borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
+    if (this.moved)
+      throw new MovedError()
+
     return this.value
   }
 
   checkOrNull(): Nullable<this> {
-    if (!this.owned)
+    if (this.borrowed)
       return
+    if (this.moved)
+      return
+
     return this
   }
 
   checkOrThrow(): this {
     if (this.borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
+    if (this.moved)
+      throw new MovedError()
+
     return this
   }
 
@@ -116,9 +110,12 @@ export class Box<T> implements Disposable {
    * @returns T or null-like if not owned
    */
   unwrapOrNull(): Nullable<T> {
-    if (!this.owned)
+    if (this.borrowed)
       return
-    this.#state = "dropped"
+    if (this.moved)
+      return
+
+    this.#state = "moved"
 
     return this.value
   }
@@ -131,9 +128,10 @@ export class Box<T> implements Disposable {
   unwrapOrThrow(): T {
     if (this.borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
-    this.#state = "dropped"
+    if (this.moved)
+      throw new MovedError()
+
+    this.#state = "moved"
 
     return this.value
   }
@@ -143,9 +141,12 @@ export class Box<T> implements Disposable {
    * @returns Box<T> or null-like if moved
    */
   moveOrNull(): Nullable<Box<T>> {
-    if (!this.owned)
+    if (this.borrowed)
       return
-    this.#state = "dropped"
+    if (this.moved)
+      return
+
+    this.#state = "moved"
 
     return new Box(this.value, this.clean)
   }
@@ -158,53 +159,38 @@ export class Box<T> implements Disposable {
   moveOrThrow(): Box<T> {
     if (this.borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
-    this.#state = "dropped"
+    if (this.moved)
+      throw new MovedError()
+
+    this.#state = "moved"
 
     return new Box(this.value, this.clean)
   }
 
   borrowOrNull(): Nullable<Borrow<T>> {
-    if (!this.owned)
+    if (this.borrowed)
       return
+    if (this.moved)
+      return
+
     this.#state = "borrowed"
 
-    const returnOrThrow = () => {
-      if (this.owned)
-        throw new OwnedError()
+    const dispose = () => { this.#state = "owned" }
 
-      if (this.borrowed)
-        this.#state = "owned"
-      else if (this.dropped)
-        this.clean[Symbol.dispose]()
-
-      return
-    }
-
-    return new Borrow(this.value, new Deferred(returnOrThrow))
+    return new Borrow(this.value, new Deferred(dispose))
   }
 
   borrowOrThrow(): Borrow<T> {
     if (this.borrowed)
       throw new BorrowedError()
-    if (this.dropped)
-      throw new DroppedError()
+    if (this.moved)
+      throw new MovedError()
+
     this.#state = "borrowed"
 
-    const returnOrThrow = () => {
-      if (this.owned)
-        throw new OwnedError()
+    const dispose = () => { this.#state = "owned" }
 
-      if (this.borrowed)
-        this.#state = "owned"
-      else if (this.dropped)
-        this.clean[Symbol.dispose]()
-
-      return
-    }
-
-    return new Borrow(this.value, new Deferred(returnOrThrow))
+    return new Borrow(this.value, new Deferred(dispose))
   }
 
   getAndDispose() {
