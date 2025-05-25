@@ -7,12 +7,12 @@ export class Pin<T> implements Disposable {
     readonly clean: Disposable
   ) { }
 
-  static with<T>(value: T, clean: (value: T) => void) {
-    return new Pin(value, new Deferred(() => clean(value)))
+  static from<T extends Disposable>(value: T) {
+    return new Pin(value, value)
   }
 
-  static from<T extends Disposable>(value: T) {
-    return new Pin(value, new Deferred(() => value[Symbol.dispose]()))
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new Pin(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {
@@ -39,15 +39,15 @@ export class AsyncPin<T> implements AsyncDisposable {
 
   constructor(
     readonly value: T,
-    readonly clean: AsyncDeferred
+    readonly clean: AsyncDisposable
   ) { }
+
+  static from<T extends AsyncDisposable>(value: T) {
+    return new AsyncPin(value, value)
+  }
 
   static with<T>(value: T, clean: (value: T) => PromiseLike<void>) {
     return new AsyncPin(value, new AsyncDeferred(() => clean(value)))
-  }
-
-  static from<T extends AsyncDisposable>(value: T) {
-    return new AsyncPin(value, new AsyncDeferred(() => value[Symbol.asyncDispose]()))
   }
 
   async [Symbol.asyncDispose]() {

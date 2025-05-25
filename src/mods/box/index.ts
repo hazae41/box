@@ -32,12 +32,12 @@ export class Box<T> implements Disposable {
     readonly clean: Disposable
   ) { }
 
-  static with<T>(value: T, clean: (value: T) => void) {
-    return new Box(value, new Deferred(() => clean(value)))
+  static from<T extends Disposable>(value: T) {
+    return new Box(value, value)
   }
 
-  static from<T extends Disposable>(value: T) {
-    return new Box(value, new Deferred(() => value[Symbol.dispose]()))
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new Box(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {

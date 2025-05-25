@@ -46,12 +46,12 @@ export class Borrow<T> {
     readonly clean: Disposable
   ) { }
 
-  static with<T>(value: T, clean: (value: T) => void) {
-    return new Borrow(value, new Deferred(() => clean(value)))
+  static from<T extends Disposable>(value: T) {
+    return new Borrow(value, value)
   }
 
-  static from<T extends Disposable>(value: T) {
-    return new Borrow(value, new Deferred(() => value[Symbol.dispose]()))
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new Borrow(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {
