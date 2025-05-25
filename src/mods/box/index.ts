@@ -170,7 +170,19 @@ export class Box<T> implements Disposable {
       return
     this.#state = "borrowed"
 
-    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
+    const returnOrThrow = () => {
+      if (this.owned)
+        throw new OwnedError()
+
+      if (this.borrowed)
+        this.#state = "owned"
+      else if (this.dropped)
+        this.clean[Symbol.dispose]()
+
+      return
+    }
+
+    return new Borrow(this.value, new Deferred(returnOrThrow))
   }
 
   borrowOrThrow(): Borrow<T> {
@@ -180,19 +192,19 @@ export class Box<T> implements Disposable {
       throw new DroppedError()
     this.#state = "borrowed"
 
-    return new Borrow(this.value, new Deferred(() => this.#returnOrThrow()))
-  }
+    const returnOrThrow = () => {
+      if (this.owned)
+        throw new OwnedError()
 
-  #returnOrThrow(): void {
-    if (this.owned)
-      throw new OwnedError()
+      if (this.borrowed)
+        this.#state = "owned"
+      else if (this.dropped)
+        this.clean[Symbol.dispose]()
 
-    if (this.borrowed)
-      this.#state = "owned"
-    else if (this.dropped)
-      this.clean[Symbol.dispose]()
+      return
+    }
 
-    return
+    return new Borrow(this.value, new Deferred(returnOrThrow))
   }
 
   getAndDispose() {
