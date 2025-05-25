@@ -33,6 +33,12 @@ export class Once<T extends Disposable> {
     return this.value
   }
 
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
 }
 
 export class AsyncOnce<T extends AsyncDisposable> {
@@ -60,6 +66,12 @@ export class AsyncOnce<T extends AsyncDisposable> {
   }
 
   get() {
+    return this.value
+  }
+
+  async dispose() {
+    await this[Symbol.asyncDispose]()
+
     return this.value
   }
 

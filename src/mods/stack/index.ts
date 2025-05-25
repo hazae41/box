@@ -7,15 +7,15 @@ export class Stack<T extends Disposable> {
    * A stack of disposable objects
    */
   constructor(
-    readonly array: T[] = []
+    readonly value: T[] = []
   ) { }
 
   [Symbol.iterator]() {
-    return this.array[Symbol.iterator]()
+    return this.value[Symbol.iterator]()
   }
 
   [Symbol.dispose](this: Stack<Disposable>) {
-    for (const value of this.array)
+    for (const value of this.value)
       value[Symbol.dispose]()
     //
   }
@@ -25,7 +25,17 @@ export class Stack<T extends Disposable> {
   }
 
   push(value: T) {
-    this.array.push(value)
+    this.value.push(value)
+  }
+
+  get() {
+    return this.value
+  }
+
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
   }
 
 }
@@ -36,21 +46,31 @@ export class AsyncStack<T extends AsyncDisposable> {
    * A stack of disposable objects
    */
   constructor(
-    readonly array: T[] = []
+    readonly value: T[] = []
   ) { }
 
   [Symbol.iterator]() {
-    return this.array[Symbol.iterator]()
+    return this.value[Symbol.iterator]()
   }
 
   async [Symbol.asyncDispose]() {
-    for (const value of this.array)
+    for (const value of this.value)
       await value[Symbol.asyncDispose]()
     //
   }
 
   push(value: T) {
-    this.array.push(value)
+    this.value.push(value)
+  }
+
+  get() {
+    return this.value
+  }
+
+  async getAndDispose() {
+    await this[Symbol.asyncDispose]()
+
+    return this.value
   }
 
 }

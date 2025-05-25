@@ -33,6 +33,12 @@ export class Cell<T extends Disposable> {
     return old
   }
 
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
 }
 
 export class AsyncCell<T extends AsyncDisposable> {
@@ -61,6 +67,12 @@ export class AsyncCell<T extends AsyncDisposable> {
     const old = this.value
     this.value = value
     return old
+  }
+
+  async getAndDispose() {
+    await this[Symbol.asyncDispose]()
+
+    return this.value
   }
 
 }

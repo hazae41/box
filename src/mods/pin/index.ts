@@ -27,6 +27,12 @@ export class Pin<T> implements Disposable {
     return this.value
   }
 
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
 }
 
 export class AsyncPin<T> implements AsyncDisposable {
@@ -49,6 +55,12 @@ export class AsyncPin<T> implements AsyncDisposable {
   }
 
   get() {
+    return this.value
+  }
+
+  async getAndDispose() {
+    await this[Symbol.asyncDispose]()
+
     return this.value
   }
 

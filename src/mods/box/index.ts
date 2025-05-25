@@ -195,4 +195,10 @@ export class Box<T> implements Disposable {
     return
   }
 
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
 }

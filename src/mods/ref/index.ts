@@ -12,4 +12,8 @@ export class Ref<T> {
     return this.value
   }
 
+  getAndDispose() {
+    return this.value
+  }
+
 }

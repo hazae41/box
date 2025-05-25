@@ -29,8 +29,9 @@ export class Auto<T extends Disposable> {
     return this.value
   }
 
-  unwrap() {
-    using _ = this
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
@@ -66,8 +67,9 @@ export class AsyncAuto<T extends AsyncDisposable> {
     return this.value
   }
 
-  unwrap() {
-    using _ = this
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 

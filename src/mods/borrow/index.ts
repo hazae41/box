@@ -142,4 +142,10 @@ export class Borrow<T> {
     return
   }
 
+  getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
 }

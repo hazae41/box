@@ -29,8 +29,9 @@ export class Tick<T extends Disposable> {
     return this.value
   }
 
-  unwrap() {
-    using _ = this
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
@@ -67,8 +68,9 @@ export class AsyncTick<T extends AsyncDisposable> {
     return this.value
   }
 
-  unwrap() {
-    using _ = this
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
