@@ -10,6 +10,10 @@ export class Stack<T extends Disposable> {
     readonly array: T[] = []
   ) { }
 
+  [Symbol.iterator]() {
+    return this.array[Symbol.iterator]()
+  }
+
   [Symbol.dispose](this: Stack<Disposable>) {
     for (const value of this.array)
       value[Symbol.dispose]()
@@ -34,6 +38,10 @@ export class AsyncStack<T extends AsyncDisposable> {
   constructor(
     readonly array: T[] = []
   ) { }
+
+  [Symbol.iterator]() {
+    return this.array[Symbol.iterator]()
+  }
 
   async [Symbol.asyncDispose]() {
     for (const value of this.array)
