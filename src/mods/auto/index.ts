@@ -1,9 +1,8 @@
-import { AsyncDeferred, Deferred } from "mods/deferred/index.js"
 
 /**
  * A reference that will be disposed when garbage collected
  */
-export class Auto<T> {
+export class Auto<T extends Disposable> {
 
   static readonly cleanup = (x: Disposable) => x[Symbol.dispose]()
   static readonly registry = new FinalizationRegistry(Auto.cleanup)
@@ -13,18 +12,9 @@ export class Auto<T> {
    * @param value 
    */
   constructor(
-    readonly value: T,
-    readonly clean: Disposable
+    readonly value: T
   ) {
-    Auto.registry.register(this, clean, this)
-  }
-
-  static with<T>(value: T, clean: (value: T) => void) {
-    return new Auto(value, new Deferred(() => clean(value)))
-  }
-
-  static from<T extends Disposable>(value: T) {
-    return new Auto(value, new Deferred(() => value[Symbol.dispose]()))
+    Auto.registry.register(this, value, this)
   }
 
   [Symbol.dispose]() {
@@ -49,7 +39,7 @@ export class Auto<T> {
 /**
  * A reference that will be disposed when garbage collected
  */
-export class AsyncAuto<T> {
+export class AsyncAuto<T extends AsyncDisposable> {
 
   static readonly cleanup = (x: AsyncDisposable) => x[Symbol.asyncDispose]().then(undefined, console.error)
   static readonly registry = new FinalizationRegistry(AsyncAuto.cleanup)
@@ -59,18 +49,9 @@ export class AsyncAuto<T> {
    * @param value 
    */
   constructor(
-    readonly value: T,
-    readonly clean: AsyncDisposable
+    readonly value: T
   ) {
-    AsyncAuto.registry.register(this, clean, this)
-  }
-
-  static with<T>(value: T, clean: (value: T) => PromiseLike<void>) {
-    return new AsyncAuto(value, new AsyncDeferred(() => clean(value)))
-  }
-
-  static from<T extends AsyncDisposable>(value: T) {
-    return new AsyncAuto(value, new AsyncDeferred(() => value[Symbol.asyncDispose]()))
+    AsyncAuto.registry.register(this, value, this)
   }
 
   [Symbol.dispose]() {
