@@ -1,4 +1,4 @@
-export class Ref<T extends Disposable> {
+export class Ref<T> {
 
   constructor(
     readonly value: T

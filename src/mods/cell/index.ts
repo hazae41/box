@@ -19,10 +19,6 @@ export class Cell<T extends Disposable> {
     this[Symbol.dispose]()
   }
 
-  static create<T extends Disposable>(value: T) {
-    return new Cell(value)
-  }
-
   get() {
     return this.value
   }
@@ -51,10 +47,6 @@ export class AsyncCell<T extends AsyncDisposable> {
 
   async [Symbol.asyncDispose]() {
     await this.value[Symbol.asyncDispose]()
-  }
-
-  static create<T extends AsyncDisposable>(value: T) {
-    return new AsyncCell(value)
   }
 
   get() {

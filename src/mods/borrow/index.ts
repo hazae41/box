@@ -43,10 +43,10 @@ export class Borrow<T> {
 
   constructor(
     readonly value: T,
-    readonly clean: Deferred
+    readonly clean: Disposable
   ) { }
 
-  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+  static with<T>(value: T, clean: (value: T) => void = () => { }) {
     return new Borrow(value, new Deferred(() => clean(value)))
   }
 
@@ -140,11 +140,6 @@ export class Borrow<T> {
       this.clean[Symbol.dispose]()
 
     return
-  }
-
-  async await<T>(this: Borrow<Promise<T>>) {
-    using _ = this.clean
-    return await this.get()
   }
 
 }

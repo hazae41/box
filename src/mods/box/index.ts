@@ -29,10 +29,10 @@ export class Box<T> implements Disposable {
    */
   constructor(
     readonly value: T,
-    readonly clean: Deferred
+    readonly clean: Disposable
   ) { }
 
-  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+  static with<T>(value: T, clean: (value: T) => void = () => { }) {
     return new Box(value, new Deferred(() => clean(value)))
   }
 
@@ -193,11 +193,6 @@ export class Box<T> implements Disposable {
       this.clean[Symbol.dispose]()
 
     return
-  }
-
-  async await<T>(this: Box<Promise<T>>) {
-    using _ = this.clean
-    return await this.get()
   }
 
 }

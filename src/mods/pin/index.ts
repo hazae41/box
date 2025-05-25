@@ -4,10 +4,10 @@ export class Pin<T> implements Disposable {
 
   constructor(
     readonly value: T,
-    readonly clean: Deferred
+    readonly clean: Disposable
   ) { }
 
-  static wrap<T>(value: T, clean: (value: T) => void = () => { }) {
+  static with<T>(value: T, clean: (value: T) => void = () => { }) {
     return new Pin(value, new Deferred(() => clean(value)))
   }
 
@@ -27,11 +27,6 @@ export class Pin<T> implements Disposable {
     return this.value
   }
 
-  async await<T>(this: Pin<Promise<T>>) {
-    using _ = this.clean
-    return await this.get()
-  }
-
 }
 
 export class AsyncPin<T> implements AsyncDisposable {
@@ -41,7 +36,7 @@ export class AsyncPin<T> implements AsyncDisposable {
     readonly clean: AsyncDeferred
   ) { }
 
-  static wrap<T>(value: T, clean: (value: T) => PromiseLike<void> = async () => { }) {
+  static with<T>(value: T, clean: (value: T) => PromiseLike<void> = async () => { }) {
     return new AsyncPin(value, new AsyncDeferred(() => clean(value)))
   }
 
@@ -55,11 +50,6 @@ export class AsyncPin<T> implements AsyncDisposable {
 
   get() {
     return this.value
-  }
-
-  async await<T>(this: AsyncPin<Promise<T>>) {
-    await using _ = this.clean
-    return await this.get()
   }
 
 }
