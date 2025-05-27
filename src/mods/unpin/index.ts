@@ -36,7 +36,7 @@ export class Unpin<T> implements Disposable {
 
   [Symbol.dispose]() {
     if (this.#moved)
-      throw new MovedError()
+      return
 
     this.clean[Symbol.dispose]()
   }
