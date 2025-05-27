@@ -1,18 +1,81 @@
-export class Ref<T> {
+import { Deferred } from "mods/deferred/index.js"
+import { AsyncWrap, Wrap } from "mods/wrap/index.js"
+
+/**
+ * A simple reference
+ */
+export class Ref<T> implements Disposable {
 
   constructor(
-    readonly value: T
+    readonly value: T,
+    readonly clean: Disposable
   ) { }
 
-  [Symbol.dispose]() { }
+  static wrap<T extends Disposable>(value: T) {
+    return new Ref(value, value)
+  }
 
-  async [Symbol.asyncDispose]() { }
+  static from<T>(value: Wrap<T>) {
+    return new Ref(value.get(), value)
+  }
+
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new Ref(value, new Deferred(() => clean(value)))
+  }
+
+  [Symbol.dispose]() {
+    this.clean[Symbol.dispose]()
+  }
+
+  async [Symbol.asyncDispose]() {
+    this[Symbol.dispose]()
+  }
 
   get() {
     return this.value
   }
 
   getAndDispose() {
+    this[Symbol.dispose]()
+
+    return this.value
+  }
+
+}
+
+/**
+ * A simple reference
+ */
+export class AsyncRef<T> implements AsyncDisposable {
+
+  constructor(
+    readonly value: T,
+    readonly clean: AsyncDisposable
+  ) { }
+
+  static wrap<T extends AsyncDisposable>(value: T) {
+    return new AsyncRef(value, value)
+  }
+
+  static from<T>(value: AsyncWrap<T>) {
+    return new AsyncRef(value.get(), value)
+  }
+
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new AsyncRef(value, new Deferred(() => clean(value)))
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.clean[Symbol.asyncDispose]()
+  }
+
+  get() {
+    return this.value
+  }
+
+  async getAndDispose() {
+    await this[Symbol.asyncDispose]()
+
     return this.value
   }
 

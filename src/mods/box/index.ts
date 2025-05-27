@@ -1,7 +1,9 @@
 import { Nullable } from "libs/nullable/index.js"
-import { Borrow, BorrowedError } from "mods/borrow/index.js"
+import { BorrowedError } from "mods/borrow/index.js"
 import { Deferred } from "mods/deferred/index.js"
-import { MovedError } from "mods/unpin/index.js"
+import { MovedError } from "mods/move/index.js"
+import { Ref } from "mods/ref/index.js"
+import { Wrap } from "mods/wrap/index.js"
 
 /**
  * A movable and borrowable reference
@@ -19,8 +21,12 @@ export class Box<T> implements Disposable {
     readonly clean: Disposable
   ) { }
 
-  static from<T extends Disposable>(value: T) {
+  static wrap<T extends Disposable>(value: T) {
     return new Box(value, value)
+  }
+
+  static from<T>(value: Wrap<T>) {
+    return new Box(value.get(), value)
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
@@ -58,6 +64,12 @@ export class Box<T> implements Disposable {
    * @returns T
    */
   get() {
+    return this.value
+  }
+
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
@@ -168,7 +180,7 @@ export class Box<T> implements Disposable {
     return new Box(this.value, this.clean)
   }
 
-  borrowOrNull(): Nullable<Borrow<T>> {
+  borrowOrNull(): Nullable<Ref<T>> {
     if (this.borrowed)
       return
     if (this.moved)
@@ -178,10 +190,10 @@ export class Box<T> implements Disposable {
 
     const dispose = () => { this.#state = "owned" }
 
-    return new Borrow(this.value, new Deferred(dispose))
+    return new Ref(this.value, new Deferred(dispose))
   }
 
-  borrowOrThrow(): Borrow<T> {
+  borrowOrThrow(): Ref<T> {
     if (this.borrowed)
       throw new BorrowedError()
     if (this.moved)
@@ -191,13 +203,7 @@ export class Box<T> implements Disposable {
 
     const dispose = () => { this.#state = "owned" }
 
-    return new Borrow(this.value, new Deferred(dispose))
-  }
-
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
+    return new Ref(this.value, new Deferred(dispose))
   }
 
 }

@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { assert, test } from "@hazae41/phobos";
-import { Borrowable } from "mods/borrow/index.js";
+import { Borrow, Borrowable } from "mods/borrow/index.js";
 import { Box } from "./index.js";
 
 class Resource implements Disposable {
@@ -52,7 +52,7 @@ await test("holder", async ({ test, message }) => {
   console.log(message)
 
   const resource = new Resource()
-  const box = Box.from(resource)
+  const box = Box.wrap(resource)
 
   {
     using a = new A(box)
@@ -71,7 +71,7 @@ await test("dummy", async ({ test, message }) => {
    * This block will keep ownership of the box
    */
   {
-    using box = Box.from(resource)
+    using box = Box.wrap(resource)
 
     assert(!resource.disposed)
   }
@@ -85,10 +85,9 @@ await test("borrow", async ({ test, message }) => {
   const resource = new Resource()
 
   async function borrow(parent: Borrowable<Resource>) {
-    using borrow = parent.borrowOrThrow()
-    const value = borrow.getOrThrow()
+    using borrow = Borrow.from(parent.borrowOrThrow())
 
-    assert(value === resource)
+    assert(borrow.get() === resource)
 
     assert(borrow.borrowed === false)
     assert(parent.borrowed === true)
@@ -102,10 +101,9 @@ await test("borrow", async ({ test, message }) => {
   }
 
   async function borrow2(parent: Borrowable<Resource>) {
-    using borrow = parent.borrowOrThrow()
-    const value = borrow.getOrThrow()
+    using borrow = Borrow.from(parent.borrowOrThrow())
 
-    assert(value === resource)
+    assert(borrow.get() === resource)
 
     assert(borrow.borrowed === false)
     assert(parent.borrowed === true)
@@ -114,7 +112,7 @@ await test("borrow", async ({ test, message }) => {
   }
 
   {
-    using box = Box.from(resource)
+    using box = Box.wrap(resource)
 
     await borrow(box)
 

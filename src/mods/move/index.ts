@@ -1,5 +1,6 @@
 import { Nullable } from "libs/nullable/index.js"
 import { Deferred } from "mods/deferred/index.js"
+import { Wrap } from "mods/wrap/index.js"
 
 export class MovedError extends Error {
   readonly #class = MovedError
@@ -28,16 +29,16 @@ export interface Movable<T> {
 
   unwrapOrThrow(): T
 
-  moveOrNull(): Nullable<Unpin<T>>
+  moveOrNull(): Nullable<Move<T>>
 
-  moveOrThrow(): Unpin<T>
+  moveOrThrow(): Move<T>
 
 }
 
 /**
  * A movable reference
  */
-export class Unpin<T> implements Disposable, Movable<T> {
+export class Move<T> implements Disposable, Movable<T> {
 
   #moved = false
 
@@ -50,12 +51,16 @@ export class Unpin<T> implements Disposable, Movable<T> {
     readonly clean: Disposable
   ) { }
 
-  static from<T extends Disposable>(value: T) {
-    return new Unpin(value, value)
+  static wrap<T extends Disposable>(value: T) {
+    return new Move(value, value)
+  }
+
+  static from<T>(value: Wrap<T>) {
+    return new Move(value.get(), value)
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
-    return new Unpin(value, new Deferred(() => clean(value)))
+    return new Move(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {
@@ -78,6 +83,12 @@ export class Unpin<T> implements Disposable, Movable<T> {
    * @returns T
    */
   get() {
+    return this.value
+  }
+
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
@@ -149,13 +160,13 @@ export class Unpin<T> implements Disposable, Movable<T> {
    * Move the value to a new Unpin and set this one as moved or null-like if already moved
    * @returns Unpin<T> or null-like if moved
    */
-  moveOrNull(): Nullable<Unpin<T>> {
+  moveOrNull(): Nullable<Move<T>> {
     if (this.#moved)
       return
 
     this.#moved = true
 
-    return new Unpin(this.value, this.clean)
+    return new Move(this.value, this.clean)
   }
 
   /**
@@ -163,19 +174,13 @@ export class Unpin<T> implements Disposable, Movable<T> {
    * @returns Unpin<T>
    * @throws DroppedError if already moved
    */
-  moveOrThrow(): Unpin<T> {
+  moveOrThrow(): Move<T> {
     if (this.#moved)
       throw new MovedError()
 
     this.#moved = true
 
-    return new Unpin(this.value, this.clean)
-  }
-
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
+    return new Move(this.value, this.clean)
   }
 
 }

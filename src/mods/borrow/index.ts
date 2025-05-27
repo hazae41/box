@@ -1,5 +1,7 @@
 import { Nullable } from "libs/nullable/index.js"
 import { Deferred } from "mods/deferred/index.js"
+import { Ref } from "mods/ref/index.js"
+import { Wrap } from "mods/wrap/index.js"
 
 export class BorrowedError extends Error {
   readonly #class = BorrowedError
@@ -24,9 +26,9 @@ export interface Borrowable<T> {
 
   checkOrThrow(): this
 
-  borrowOrNull(): Nullable<Borrow<T>>
+  borrowOrNull(): Nullable<Ref<T>>
 
-  borrowOrThrow(): Borrow<T>
+  borrowOrThrow(): Ref<T>
 
 }
 
@@ -43,8 +45,12 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
     readonly clean: Disposable
   ) { }
 
-  static from<T extends Disposable>(value: T) {
+  static wrap<T extends Disposable>(value: T) {
     return new Borrow(value, value)
+  }
+
+  static from<T>(value: Wrap<T>) {
+    return new Borrow(value.get(), value)
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
@@ -67,6 +73,12 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
   }
 
   get() {
+    return this.value
+  }
+
+  getAndDispose() {
+    this[Symbol.dispose]()
+
     return this.value
   }
 
@@ -98,7 +110,7 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
     return this
   }
 
-  borrowOrNull(): Nullable<Borrow<T>> {
+  borrowOrNull(): Nullable<Ref<T>> {
     if (this.#borrowed)
       return
 
@@ -106,10 +118,10 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
 
     const dispose = () => { this.#borrowed = false }
 
-    return new Borrow(this.value, new Deferred(dispose))
+    return new Ref(this.value, new Deferred(dispose))
   }
 
-  borrowOrThrow(): Borrow<T> {
+  borrowOrThrow(): Ref<T> {
     if (this.#borrowed)
       throw new BorrowedError()
 
@@ -117,13 +129,7 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
 
     const dispose = () => { this.#borrowed = false }
 
-    return new Borrow(this.value, new Deferred(dispose))
-  }
-
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
+    return new Ref(this.value, new Deferred(dispose))
   }
 
 }
