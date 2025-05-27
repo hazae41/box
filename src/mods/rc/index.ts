@@ -45,6 +45,10 @@ export class Rc<T> {
     this[Symbol.dispose]()
   }
 
+  get count() {
+    return this.#count
+  }
+
   get() {
     return this.value
   }
