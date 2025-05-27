@@ -11,7 +11,7 @@ export class NotUniqueError extends Error {
   }
 }
 
-export class Rc<T> {
+export class Count<T> {
 
   #count = 1
 
@@ -21,15 +21,15 @@ export class Rc<T> {
   ) { }
 
   static wrap<T extends Disposable>(value: T) {
-    return new Rc(value, value)
+    return new Count(value, value)
   }
 
   static from<T>(value: Wrap<T>) {
-    return new Rc(value.get(), value)
+    return new Count(value.get(), value)
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
-    return new Rc(value, new Deferred(() => clean(value)))
+    return new Count(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {
