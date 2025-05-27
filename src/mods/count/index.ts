@@ -35,7 +35,7 @@ export class Count<T> {
   [Symbol.dispose]() {
     this.#count--
 
-    if (this.#count > 1)
+    if (this.#count > 0)
       return
 
     this.clean[Symbol.dispose]()
