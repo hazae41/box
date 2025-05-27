@@ -1,7 +1,18 @@
+import { Nullable } from "libs/nullable/index.js"
+
+export class DisposedError extends Error {
+  readonly #class = DisposedError
+  readonly name = this.#class.name
+
+  constructor() {
+    super(`Reference has been disposed`)
+  }
+}
+
 /**
  * A reference that can only be disposed once
  */
-export class Once<T extends Disposable> {
+export class Once<T> {
 
   #disposed = false
 
@@ -10,15 +21,16 @@ export class Once<T extends Disposable> {
    * @param value 
    */
   constructor(
-    readonly value: T
+    readonly value: T,
+    readonly clean: Disposable
   ) { }
 
-  [Symbol.dispose](this: Once<Disposable>) {
+  [Symbol.dispose]() {
     if (this.#disposed)
       return
     this.#disposed = true
 
-    this.value[Symbol.dispose]()
+    this.clean[Symbol.dispose]()
   }
 
   async [Symbol.asyncDispose]() {
@@ -39,9 +51,23 @@ export class Once<T extends Disposable> {
     return this.value
   }
 
+  getOrNull(): Nullable<T> {
+    if (this.#disposed)
+      return
+
+    return this.value
+  }
+
+  getOrThrow(): T {
+    if (this.#disposed)
+      throw new DisposedError()
+
+    return this.value
+  }
+
 }
 
-export class AsyncOnce<T extends AsyncDisposable> {
+export class AsyncOnce<T> {
 
   #disposed = false
 
@@ -50,7 +76,8 @@ export class AsyncOnce<T extends AsyncDisposable> {
    * @param value 
    */
   constructor(
-    readonly value: T
+    readonly value: T,
+    readonly clean: AsyncDisposable
   ) { }
 
   async [Symbol.asyncDispose]() {
@@ -58,7 +85,7 @@ export class AsyncOnce<T extends AsyncDisposable> {
       return
     this.#disposed = true
 
-    await this.value[Symbol.asyncDispose]()
+    await this.clean[Symbol.asyncDispose]()
   }
 
   get disposed() {
@@ -69,8 +96,22 @@ export class AsyncOnce<T extends AsyncDisposable> {
     return this.value
   }
 
-  async dispose() {
+  async getAndDispose() {
     await this[Symbol.asyncDispose]()
+
+    return this.value
+  }
+
+  getOrNull(): Nullable<T> {
+    if (this.#disposed)
+      return
+
+    return this.value
+  }
+
+  async getOrThrow(): Promise<T> {
+    if (this.#disposed)
+      throw new DisposedError()
 
     return this.value
   }
