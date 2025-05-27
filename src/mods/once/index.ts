@@ -1,4 +1,6 @@
 import { Nullable } from "libs/nullable/index.js"
+import { Deferred } from "mods/deferred/index.js"
+import { AsyncWrap, Wrap } from "mods/wrap/index.js"
 
 export class DisposedError extends Error {
   readonly #class = DisposedError
@@ -24,6 +26,18 @@ export class Once<T> {
     readonly value: T,
     readonly clean: Disposable
   ) { }
+
+  static wrap<T extends Disposable>(value: T) {
+    return new Once(value, value)
+  }
+
+  static from<T>(value: Wrap<T>) {
+    return new Once(value.get(), value)
+  }
+
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new Once(value, new Deferred(() => clean(value)))
+  }
 
   [Symbol.dispose]() {
     if (this.#disposed)
@@ -79,6 +93,18 @@ export class AsyncOnce<T> {
     readonly value: T,
     readonly clean: AsyncDisposable
   ) { }
+
+  static wrap<T extends AsyncDisposable>(value: T) {
+    return new AsyncOnce(value, value)
+  }
+
+  static from<T>(value: AsyncWrap<T>) {
+    return new AsyncOnce(value.get(), value)
+  }
+
+  static with<T>(value: T, clean: (value: T) => void) {
+    return new AsyncOnce(value, new Deferred(() => clean(value)))
+  }
 
   async [Symbol.asyncDispose]() {
     if (this.#disposed)
