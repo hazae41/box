@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { assert, test } from "@hazae41/phobos";
-import { Borrow } from "mods/borrow/index.js";
+import { Borrowable } from "mods/borrow/index.js";
 import { Box } from "./index.js";
 
 class Resource implements Disposable {
@@ -84,32 +84,31 @@ await test("borrow", async ({ test, message }) => {
 
   const resource = new Resource()
 
-  async function borrow(parent: Box<Resource>) {
+  async function borrow(parent: Borrowable<Resource>) {
     using borrow = parent.borrowOrThrow()
     const value = borrow.getOrThrow()
 
     assert(value === resource)
 
-    borrow2(borrow)
+    assert(borrow.borrowed === false)
+    assert(parent.borrowed === true)
 
-    assert(borrow.borrowed === true)
+    await borrow2(borrow)
 
-    await new Promise(ok => setTimeout(ok, 1000))
-
-    assert(parent.dropped === true)
+    assert(borrow.borrowed === false)
+    assert(parent.borrowed === true)
 
     console.log("returning first borrow")
   }
 
-  async function borrow2(parent: Borrow<Resource>) {
+  async function borrow2(parent: Borrowable<Resource>) {
     using borrow = parent.borrowOrThrow()
     const value = borrow.getOrThrow()
 
     assert(value === resource)
 
-    await new Promise(ok => setTimeout(ok, 2000))
-
-    assert(parent.dropped === true)
+    assert(borrow.borrowed === false)
+    assert(parent.borrowed === true)
 
     console.log("returning second borrow")
   }
@@ -117,12 +116,10 @@ await test("borrow", async ({ test, message }) => {
   {
     using box = Box.from(resource)
 
-    borrow(box)
+    await borrow(box)
 
-    assert(box.borrowed === true)
+    assert(box.borrowed === false)
   }
-
-  await new Promise(ok => setTimeout(ok, 5000))
 
   assert(resource.disposed)
 })

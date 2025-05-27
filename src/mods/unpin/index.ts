@@ -10,10 +10,34 @@ export class MovedError extends Error {
   }
 }
 
+export interface Movable<T> {
+
+  readonly moved: boolean
+
+  get(): T
+
+  getOrNull(): Nullable<T>
+
+  getOrThrow(): T
+
+  checkOrNull(): Nullable<this>
+
+  checkOrThrow(): this
+
+  unwrapOrNull(): Nullable<T>
+
+  unwrapOrThrow(): T
+
+  moveOrNull(): Nullable<Unpin<T>>
+
+  moveOrThrow(): Unpin<T>
+
+}
+
 /**
  * A movable reference
  */
-export class Unpin<T> implements Disposable {
+export class Unpin<T> implements Disposable, Movable<T> {
 
   #moved = false
 

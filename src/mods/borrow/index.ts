@@ -10,11 +10,31 @@ export class BorrowedError extends Error {
   }
 }
 
+export interface Borrowable<T> {
+
+  readonly borrowed: boolean
+
+  get(): T
+
+  getOrNull(): Nullable<T>
+
+  getOrThrow(): T
+
+  checkOrNull(): Nullable<this>
+
+  checkOrThrow(): this
+
+  borrowOrNull(): Nullable<Borrow<T>>
+
+  borrowOrThrow(): Borrow<T>
+
+}
+
 /**
  * A borrowable reference
  * @param value 
  */
-export class Borrow<T> {
+export class Borrow<T> implements Disposable, Borrowable<T> {
 
   #borrowed = false
 
