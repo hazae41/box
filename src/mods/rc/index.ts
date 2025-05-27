@@ -2,12 +2,12 @@ import { Nullable } from "libs/nullable/index.js"
 import { Deferred } from "mods/deferred/index.js"
 import { Wrap } from "mods/wrap/index.js"
 
-export class RcError extends Error {
-  readonly #class = RcError
+export class NotUniqueError extends Error {
+  readonly #class = NotUniqueError
   readonly name = this.#class.name
 
   constructor() {
-    super(`Resource is already referenced`)
+    super(`Resource is not unique`)
   }
 }
 
@@ -64,7 +64,7 @@ export class Rc<T> {
 
   getOrThrow(): T {
     if (this.#count > 1)
-      throw new RcError()
+      throw new NotUniqueError()
 
     return this.value
   }
@@ -78,7 +78,7 @@ export class Rc<T> {
 
   checkOrThrow(): this {
     if (this.#count > 1)
-      throw new RcError()
+      throw new NotUniqueError()
 
     return this
   }
