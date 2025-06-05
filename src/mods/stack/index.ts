@@ -32,12 +32,6 @@ export class Stack<T extends Disposable> {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
 }
 
 export class AsyncStack<T extends AsyncDisposable> {
@@ -64,12 +58,6 @@ export class AsyncStack<T extends AsyncDisposable> {
   }
 
   get() {
-    return this.value
-  }
-
-  async getAndDispose() {
-    await this[Symbol.asyncDispose]()
-
     return this.value
   }
 

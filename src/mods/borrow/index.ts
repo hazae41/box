@@ -76,12 +76,6 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
   getOrNull(): Nullable<T> {
     if (this.#borrowed)
       return

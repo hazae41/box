@@ -53,12 +53,6 @@ export class Count<T> {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
   getOrNull(): Nullable<T> {
     if (this.#count > 1)
       return

@@ -59,12 +59,6 @@ export class Once<T> {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
   getOrNull(): Nullable<T> {
     if (this.#disposed)
       return
@@ -119,12 +113,6 @@ export class AsyncOnce<T> {
   }
 
   get() {
-    return this.value
-  }
-
-  async getAndDispose() {
-    await this[Symbol.asyncDispose]()
-
     return this.value
   }
 

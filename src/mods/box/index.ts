@@ -67,12 +67,6 @@ export class Box<T> implements Disposable {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
   /**
    * Get the value or null-like if not owned
    * @returns T or null-like if not owned

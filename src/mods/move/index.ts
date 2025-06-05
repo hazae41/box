@@ -86,12 +86,6 @@ export class Move<T> implements Disposable, Movable<T> {
     return this.value
   }
 
-  getAndDispose() {
-    this[Symbol.dispose]()
-
-    return this.value
-  }
-
   /**
    * Get the value or null-like if not owned
    * @returns T or null-like if not owned
