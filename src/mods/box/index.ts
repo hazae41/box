@@ -37,9 +37,6 @@ export class Box<T> implements Disposable {
     if (this.moved)
       return
 
-    if (this.borrowed)
-      throw new BorrowedError()
-
     this.clean[Symbol.dispose]()
   }
 

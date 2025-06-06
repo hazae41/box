@@ -58,9 +58,6 @@ export class Borrow<T> implements Disposable, Borrowable<T> {
   }
 
   [Symbol.dispose]() {
-    if (this.#borrowed)
-      throw new BorrowedError()
-
     this.clean[Symbol.dispose]()
   }
 
