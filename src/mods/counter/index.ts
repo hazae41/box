@@ -4,7 +4,7 @@ import { Wrap } from "mods/wrap/index.js"
 
 export class Counter<T> {
 
-  #count = 0
+  #count = 1
 
   constructor(
     readonly value: T,
@@ -28,9 +28,6 @@ export class Counter<T> {
   }
 
   [Symbol.dispose]() {
-    if (this.count === 0)
-      return
-
     this.#count--
 
     if (this.#count > 0)
