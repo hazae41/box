@@ -2,7 +2,7 @@ import { Deferred } from "mods/deferred/index.js"
 import { Void } from "mods/void/index.js"
 import { Wrap } from "mods/wrap/index.js"
 
-export class Counter<T> {
+export class Clone<T> {
 
   #count = 1
 
@@ -12,19 +12,19 @@ export class Counter<T> {
   ) { }
 
   static void() {
-    return new Counter<void>(undefined, new Void())
+    return new Clone<void>(undefined, new Void())
   }
 
   static wrap<T extends Disposable>(value: T) {
-    return new Counter(value, value)
+    return new Clone(value, value)
   }
 
   static from<T>(value: Wrap<T>) {
-    return new Counter(value.get(), value)
+    return new Clone(value.get(), value)
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
-    return new Counter(value, new Deferred(() => clean(value)))
+    return new Clone(value, new Deferred(() => clean(value)))
   }
 
   [Symbol.dispose]() {

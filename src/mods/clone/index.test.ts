@@ -1,5 +1,5 @@
 import { assert, test } from "@hazae41/phobos";
-import { Counter } from "./index.js";
+import { Clone } from "./index.js";
 
 class Resource implements Disposable {
 
@@ -17,7 +17,7 @@ await test("count", async ({ test, message }) => {
   const resource = new Resource()
 
   {
-    using count = Counter.wrap(resource)
+    using count = Clone.wrap(resource)
 
     {
       using clone = count.clone()
@@ -30,7 +30,7 @@ await test("count", async ({ test, message }) => {
     assert(count.count === 1)
 
     {
-      async function use(count: Counter<Resource>) {
+      async function use(count: Clone<Resource>) {
         using _ = count.clone()
 
         await new Promise(resolve => setTimeout(resolve, 1000))
