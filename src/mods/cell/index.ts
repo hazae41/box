@@ -1,7 +1,7 @@
 /**
  * An interior mutable reference
  */
-export class Cell<T extends Disposable> {
+export class Cell<T> {
 
   /**
    * A mutable reference
@@ -11,41 +11,11 @@ export class Cell<T extends Disposable> {
     public value: T
   ) { }
 
-  [Symbol.dispose]() {
+  [Symbol.dispose](this: Cell<Disposable>) {
     this.value[Symbol.dispose]()
   }
 
-  async [Symbol.asyncDispose]() {
-    this[Symbol.dispose]()
-  }
-
-  get() {
-    return this.value
-  }
-
-  set(value: T) {
-    this.value = value
-  }
-
-  getAndSet(value: T) {
-    const old = this.value
-    this.value = value
-    return old
-  }
-
-}
-
-export class AsyncCell<T extends AsyncDisposable> {
-
-  /**
-   * A mutable reference
-   * @param value 
-   */
-  constructor(
-    public value: T
-  ) { }
-
-  async [Symbol.asyncDispose]() {
+  async [Symbol.asyncDispose](this: Cell<AsyncDisposable>) {
     await this.value[Symbol.asyncDispose]()
   }
 
